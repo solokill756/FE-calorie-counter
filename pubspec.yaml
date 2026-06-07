@@ -1,0 +1,139 @@
+name: caloriecounter
+description: 'A calorie counter app similar to MyFitnessPal'
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.8.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Camera and gallery access
+  image_picker: ^1.0.4
+  permission_handler: ^11.0.1
+  device_info_plus: ^9.1.0
+
+  # Cupertino Icons (optional even on Material)
+  cupertino_icons: ^1.0.8
+
+  # local storage
+  shared_preferences: ^2.2.2
+  flutter_secure_storage: ^9.0.0
+  rx_shared_preferences: ^3.1.0
+
+  # state management
+  bloc: ^8.1.3
+  flutter_bloc: ^8.1.3
+
+  dartx: ^1.2.0
+  result_dart: ^1.1.1
+  path: ^1.9.0
+  intl: ^0.20.2
+
+  # ui
+  oktoast: ^3.3.1
+  flutter_snake_navigationbar: ^0.6.1
+  shimmer: ^3.0.0
+  cached_network_image: ^3.3.1
+  carousel_slider: ^5.0.0
+  smooth_page_indicator: ^1.1.0
+  flutter_easyloading: ^3.0.5
+  sizer: ^3.0.5
+  flutter_screenutil: ^5.9.0
+  asuka: ^2.2.1
+  gap: ^3.0.1
+  popover: ^0.3.1
+  font_awesome_flutter: ^10.8.0
+  fl_chart: ^0.66.2
+
+  # navigation (align runtime & generator)
+  auto_route: ^8.1.4
+
+  # dependency injection
+  get_it: ^7.6.8
+  injectable: ^2.4.1
+
+  # access environment variables in .env file
+  flutter_dotenv: ^5.1.0
+
+  # model generation
+  freezed_annotation: ^2.4.1
+  json_annotation: ^4.9.0
+
+  # RESTful API
+  dio: ^5.4.2
+  retrofit: ^4.6.0
+
+  # talker & logger
+  talker_flutter: ^4.1.3
+  talker_bloc_logger: ^4.1.3
+  talker_dio_logger: ^4.6.11
+  rate_my_app: ^2.3.1
+
+  # Firebase (keep as-is)
+  firebase_core: ^4.1.0
+  firebase_auth: ^6.0.2
+  cloud_firestore: ^6.0.1
+  firebase_storage: ^13.0.1
+  google_sign_in: ^6.2.1 # Cho đăng nhập Google
+  sign_in_with_apple: ^6.1.1 # Cho đăng nhập Apple
+  crypto: ^3.0.3
+
+  uuid: ^4.3.3
+  country_picker: ^2.0.27
+  mime: ^2.0.0
+  http_parser: ^4.1.2
+  share_plus: ^10.1.2
+  path_provider: ^2.1.5
+  flutter_local_notifications: ^17.2.3
+  flutter_timezone: ^5.0.2
+  timezone: ^0.9.4
+  firebase_messaging: ^16.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+  mocktail: ^1.0.4
+  bloc_test: ^9.1.5
+
+  # builders
+  build_runner: ^2.4.9
+  flutter_launcher_icons: ^0.13.1
+
+  # code generators (aligned)
+  freezed: ^2.5.2
+  json_serializable: ^6.7.1
+  auto_route_generator: ^8.0.0
+  # flutter_gen_runner: ^5.9.0
+  intl_utils: ^2.8.7
+  injectable_generator: ^2.6.1
+  retrofit_generator: ^8.1.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/app_images/
+    - assets/home_images/
+    - .env
+
+flutter_gen:
+  output: lib/generated/
+  assets:
+    enabled: true
+    outputs:
+      package_parameter_enabled: false
+      style: dot-delimiter
+  colors:
+    enabled: true
+    inputs:
+      - assets/color/colors.xml
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "icon_app.jpg"
