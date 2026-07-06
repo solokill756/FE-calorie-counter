@@ -1,0 +1,282 @@
+# .instructions - Flutter UI (FE/)
+
+This file provides specialized guidance for Flutter/Dart development in the `FE/` directory.
+
+---
+
+## Project Structure
+
+```
+FE/
+├── lib/
+│   ├── main.dart                    # App entry, Material 3 setup
+│   ├── src/
+│   │   ├── common/                  # Shared across all modules
+│   │   │   ├── dialogs/app_dialogs.dart
+│   │   │   ├── theme/
+│   │   │   │   └── app_shell_ui.dart
+│   │   │   └── widgets/             # Reusable UI components
+│   │   ├── modules/                 # Feature modules
+│   │   │   ├── auth/
+│   │   │   ├── dashboard/
+│   │   │   ├── diary/
+│   │   │   ├── nutrition/
+│   │   │   └── [feature]/
+│   │   │       ├── presentation/pages/
+│   │   │       ├── presentation/widgets/
+│   │   │       └── providers/ (or state management)
+│   │   └── app/
+│   │       ├── app_router.dart      # Navigation
+│   │       └── presentation/pages/main_navigation_page.dart
+│   └── main.dart
+├── pubspec.yaml
+└── README.md
+```
+
+---
+
+## Theme & Color System (Material 3)
+
+### ✅ DO
+
+```dart
+// Use theme colors — app-consistent, accessible
+final color = Theme.of(context).colorScheme.primary;
+final textStyle = Theme.of(context).textTheme.bodyLarge;
+final surface = Theme.of(context).colorScheme.surface;
+final error = Theme.of(context).colorScheme.error;
+```
+
+### ❌ DON'T
+
+```dart
+// Hardcoded colors — breaks theme, inconsistent
+Colors.blue[600]
+Color(0xFF2196F3)
+Colors.red
+```
+
+---
+
+## SnackBar & User Feedback
+
+### Color Semantics
+
+| Intent | Color | Code |
+|--------|-------|------|
+| **Success** | Green (#2E7D32) | `SnackBarStyles.successBackground` |
+| **Error** | Red | `Colors.red` or `Colors.red.shade700` |
+| **Warning / Form Validation** | Orange/Amber | `Colors.orange.shade800` |
+| **Info / In Progress** | Blue (NOT green!) | `Colors.blue.shade800` |
+
+### Using AppDialogs
+
+```dart
+// Success (default green)
+AppDialogs.showSnackBar(message: 'Data saved');
+
+// Error (required red)
+AppDialogs.showSnackBar(
+  message: 'Failed to load',
+  backgroundColor: Colors.red,
+);
+
+// Warning/validation
+AppDialogs.showSnackBar(
+  message: 'Please fill all fields',
+  backgroundColor: Colors.orange.shade800,
+);
+
+// Info (blue, not success green)
+AppDialogs.showSnackBar(
+  message: 'Processing...',
+  backgroundColor: Colors.blue.shade800,
+);
+```
+---
+
+## Loading & Error States
+
+### Loading
+
+Use the shared loading primitives first:
+
+- `LoadingWidget` for inline indicators
+- `LoadingOverlay` for blocking an existing view
+- `LoadingButton` for submit / action buttons
+- `context.showLoadingDialog()` only for full-screen blocking flows
+
+### Required loading rules
+
+- Do not create ad-hoc loading spinners inside individual pages when a shared loading widget fits.
+- Keep loading style consistent across the app: same placement, same sizing strategy, same theme-aware color.
+- Use `Theme.of(context).colorScheme` or the shared loading defaults instead of hardcoded colors.
+- Prefer one loading representation per surface: inline, overlay, button, or dialog. Do not mix styles on the same screen unless there is a clear UX reason.
+
+### Error
+
+Use a consistent split between transient and blocking errors:
+
+- Transient / action errors: `AppDialogs.showSnackBar()` with red or orange semantics.
+- Blocking page errors: a centered error state with a short message and a Retry action.
+- Unexpected exceptions: log them through the app error hooks and show a user-safe message, not a raw stack trace.
+
+### Required error rules
+
+- Do not show raw `exception.toString()` to users when a domain-friendly message exists.
+- Keep the error layout stable: same icon/message/retry structure across screens that need a full-page error state.
+- Always provide a recovery path for blocking fetch failures when the action can be retried.
+- Normalize error messages in state management or repository code so UI layers consume one consistent message shape.
+
+### State order for data screens
+
+When a screen has remote data, keep the state flow consistent:
+
+1. Loading while the first fetch is in progress.
+2. Error if the fetch fails.
+3. Empty state if the fetch succeeds but returns no data.
+4. Content when data exists.
+
+If a screen supports pull-to-refresh, keep the current content visible and use refresh loading instead of replacing the whole page unless the first load is still pending.
+
+### Example pattern
+
+```dart
+if (state is MyPageLoading) {
+  return Center(child: LoadingWidget.large(message: 'Loading...'));
+}
+
+if (state is MyPageError) {
+  return Center(
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(state.message, textAlign: TextAlign.center),
+        const Gap(16),
+        FilledButton(
+          onPressed: retry,
+          child: const Text('Retry'),
+        ),
+      ],
+    ),
+  );
+}
+```
+
+### With ScaffoldMessenger (when not using AppDialogs)
+
+```dart
+ScaffoldMessenger.of(context).showSnackBar(
+  SnackBar(
+    content: Text('Done', style: SnackBarStyles.messageStyle),
+    backgroundColor: SnackBarStyles.successBackground,
+    behavior: SnackBarBehavior.floating,
+  ),
+);
+```
+
+---
+
+## Component Reuse
+
+Always check `FE/lib/src/common/` before creating new widgets.
+
+### Common Dialogs
+
+```dart
+// From app_dialogs.dart
+AppDialogs.showSnackBar(message, backgroundColor);
+AppDialogs.showLoadingDialog(context);
+AppDialogs.showConfirmDialog(context, title, onConfirm);
+```
+
+### Common Widgets
+
+```dart
+// Check these paths for reusable components:
+// FE/lib/src/common/widgets/*.dart
+// — BottomNavWidget, AppBar variants, Cards, Forms, etc.
+
+// Use AppShellUi for consistent styling:
+import 'package:caloriecounter/src/common/theme/app_shell_ui.dart';
+
+final ctaStyle = AppShellUi.primaryCtaStyle(context);
+final cardDecor = AppShellUi.cardDecoration(context);
+final filledField = AppShellUi.filledField(context);
+```
+
+---
+
+## Layout Stability & Guardrails
+
+**Forbidden without explicit requirement:**
+
+- ❌ Unintended RTL (Directionality.rtl) on critical pages
+- ❌ Swapping navigation tab order
+- ❌ Reordering form fields
+- ❌ Inverting CTA primary/secondary button placement
+- ❌ Changing calorie/macro card visual flow
+
+### Critical Components (must preserve layout)
+
+- `main_navigation_page` — tab order
+- `app_router` — route hierarchy
+- Auth signup flow — step ordering
+- Form pages — field/helper/label alignment
+- Calorie cards — metric ordering
+
+### Required Checks Before Delivery
+
+1. ✅ Navigation: tab order preserved
+2. ✅ Forms: input row order unchanged
+3. ✅ Calorie/macro cards: metric order stable
+4. ✅ CTA region: primary/secondary order intentional
+5. ✅ Smoke test: login → dashboard → diary → nutrition
+
+### Delivery Template (for UI tasks)
+
+Include this summary:
+
+```
+## Layout Stability
+- Files touched: [list files]
+- Components affected: [list widgets]
+- Layout preserved: ✅ Yes / ❌ No
+- Smoke tests: ✅ Pass / ❌ Fail
+```
+
+---
+
+## State Management & Providers
+
+Follow the project's state management pattern (Riverpod, GetX, Provider, etc.).
+
+**When adding new state:**
+- Keep state logic in providers/notifiers, not widgets
+- Use immutable data classes (freezed recommended)
+- Handle loading/error states explicitly
+
+---
+
+## Testing & Validation
+
+- Write tests for business logic in providers
+- Test theme compliance with `testWidgets()`
+- Test SnackBar feedback colors in golden tests
+
+---
+
+## Common Gotchas
+
+1. **Hardcoded colors** — Use `Theme.of(context).colorScheme` instead
+2. **Success SnackBar for info** — Green is only for actual success; use blue for info
+3. **Layout reordering** — Always verify form field order, CTA order, nav tabs
+4. **Missing null safety** — Use `?` on nullable types, handle errors
+
+---
+
+**Questions?** See:
+- `.cursor/AGENTS.md` — full UI guardrails
+- `.cursor/rules/fe-snackbar-feedback.mdc` — SnackBar details
+- `FE/README.md` — project setup
+- `FE/lib/src/common/theme/app_shell_ui.dart` — theme helpers

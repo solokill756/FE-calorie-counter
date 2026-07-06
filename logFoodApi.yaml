@@ -1,0 +1,425 @@
+openapi: 3.0.0
+info:
+  title: Calorie Counter API
+  description: Đặc tả API cho ứng dụng đếm calo, dựa trên mã nguồn repository của Flutter.
+  version: 1.0.0
+servers:
+  - url: https://caloriescounter.mcanswers.ai/api
+    description: Máy chủ chính thức
+
+paths:
+  # ============================================
+  # Endpoints cho FoodRepository
+  # ============================================
+  /foods:
+    get:
+      summary: Lấy danh sách tất cả Food
+      tags:
+        - Food
+      responses:
+        '200':
+          description: Một danh sách FoodModel
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FoodModel'
+    post:
+      summary: Thêm một Food mới
+      tags:
+        - Food
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FoodModel'
+      responses:
+        '200':
+          description: Phản hồi trạng thái thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusApiResponse'
+
+  /foods/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: ID của Food cần thao tác
+    put:
+      summary: Cập nhật một Food đã có
+      tags:
+        - Food
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FoodModel'
+      responses:
+        '200':
+          description: Phản hồi trạng thái thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusApiResponse'
+    delete:
+      summary: Xóa một Food
+      tags:
+        - Food
+      responses:
+        '200':
+          description: Phản hồi trạng thái thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusApiResponse'
+
+  /foods/search:
+    get:
+      summary: Tìm kiếm Food
+      tags:
+        - Food
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Từ khóa tìm kiếm
+      responses:
+        '200':
+          description: Một danh sách FoodModel phù hợp
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FoodModel'
+
+  /foods/recent:
+    get:
+      summary: Lấy danh sách Food đã xem/log gần đây
+      tags:
+        - Food
+      responses:
+        '200':
+          description: Một danh sách FoodModel
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FoodModel'
+
+  /foods/my:
+    get:
+      summary: Lấy danh sách Food do người dùng tự tạo
+      tags:
+        - Food
+      responses:
+        '200':
+          description: Một danh sách FoodModel
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FoodModel'
+
+  # ============================================
+  # Endpoints cho LogFoodRepository
+  # ============================================
+  /logFood:
+    post:
+      summary: Log một food entry
+      tags:
+        - LogFood
+      requestBody:
+        description: Gửi một đối tượng LogFoodModel.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogFoodModel'
+      responses:
+        '200':
+          description: Phản hồi trạng thái thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusApiResponse'
+
+  /updateRecentFood:
+    post:
+      summary: (Nội bộ) Cập nhật một food trong danh sách 'gần đây'
+      tags:
+        - LogFood
+      requestBody:
+        description: Gửi một FoodModel và số lượng 'quantity'
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRecentFoodRequest'
+      responses:
+        '200':
+          description: Phản hồi trạng thái thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusApiResponse'
+
+  /logMultipleFoods:
+    post:
+      summary: Log nhiều food entry cùng lúc
+      tags:
+        - LogFood
+      requestBody:
+        description: Gửi một danh sách các đối tượng LogFoodModel.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/LogFoodModel'
+      responses:
+        '200':
+          description: Phản hồi trạng thái thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusApiResponse'
+
+  /logFoodToMultipleDays:
+    post:
+      summary: Log một food entry cho nhiều ngày
+      tags:
+        - LogFood
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogFoodToMultipleDaysRequest'
+      responses:
+        '200':
+          description: Phản hồi trạng thái thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusApiResponse'
+
+  /logMultipleFoodsToMultipleDays:
+    post:
+      summary: Log nhiều food entry cho nhiều ngày
+      tags:
+        - LogFood
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogMultipleFoodsToMultipleDaysRequest'
+      responses:
+        '200':
+          description: Phản hồi trạng thái thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusApiResponse'
+
+# ============================================
+# Định nghĩa Schemas (Models)
+# ============================================
+components:
+  schemas:
+    FoodModel:
+      type: object
+      required:
+        - name
+        - servingPerContainer
+        - units
+        - unitSizes
+        - unitShowIndex
+        - quantity
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        servingPerContainer:
+          type: number
+          format: double
+        units:
+          type: array
+          items:
+            type: string
+        unitSizes:
+          type: array
+          items:
+            type: number
+            format: double
+        unitShowIndex:
+          type: integer
+          format: int32
+        quantity:
+          type: number
+          format: double
+        brand:
+          type: string
+        description:
+          type: string
+        createdBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        isVerified:
+          type: boolean
+          default: false
+        nutrients:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+          default: {}
+          description: Map<String, double> ví dụ: {"calories_kcal": 100, "protein_g": 10}
+
+    LogFoodModel:
+      type: object
+      required:
+        - nameFood
+        - nutrients
+        - serving
+        - slot
+        - source
+        - time
+        - foodId
+      properties:
+        id:
+          type: integer
+          format: int32
+        brandName:
+          type: string
+        nameFood:
+          type: string
+        nutrients:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+          description: Map<String, dynamic> ví dụ: {"calories_kcal": 150, "protein_g": 15}
+        serving:
+          type: object
+          required:
+            - qty
+            - unit
+            - serving_size
+          properties:
+            qty:
+              type: number
+              format: double
+            unit:
+              type: string
+            serving_size:
+              type: number
+              format: double
+          description: Map<String, dynamic>
+        slot:
+          type: string
+        source:
+          type: string
+        time:
+          type: string
+          format: date-time
+        foodId:
+          type: integer
+          format: int32
+
+    UpdateRecentFoodRequest:
+      type: object
+      description: Dữ liệu để cập nhật recent food (FoodModel + quantity)
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        servingPerContainer:
+          type: number
+        units:
+          type: array
+          items:
+            type: string
+        unitSizes:
+          type: array
+          items:
+            type: number
+        unitShowIndex:
+          type: integer
+        quantity:
+          type: number # Trường 'quantity' được thêm vào
+        brand:
+          type: string
+        description:
+          type: string
+        createdBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        isVerified:
+          type: boolean
+        nutrients:
+          type: object
+          additionalProperties:
+            type: number
+
+    LogFoodToMultipleDaysRequest:
+      type: object
+      required:
+        - log_food
+        - dates
+      properties:
+        log_food:
+          $ref: '#/components/schemas/LogFoodModel'
+        dates:
+          type: array
+          items:
+            type: string
+            format: date-time
+          description: Danh sách các ngày (dạng chuỗi ISO 8601)
+
+    LogMultipleFoodsToMultipleDaysRequest:
+      type: object
+      required:
+        - log_foods
+        - dates
+      properties:
+        log_foods:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogFoodModel'
+        dates:
+          type: array
+          items:
+            type: string
+            format: date-time
+          description: Danh sách các ngày (dạng chuỗi ISO 8601)
+
+    StatusApiResponse:
+      type: object
+      properties:
+        statusCode:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Thao tác thành công.

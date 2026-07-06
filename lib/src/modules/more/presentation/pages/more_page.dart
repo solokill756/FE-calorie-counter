@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:caloriecounter/src/common/widgets/loading_widget.dart';
 import 'package:caloriecounter/src/core/data/local/storage.dart';
+import 'package:caloriecounter/src/modules/auth/presentation/application/cubit/user_profile_access.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
@@ -299,7 +300,7 @@ class _MoreViewState extends State<MoreView> {
   }
 
   bool _isWeightGainGoal() {
-    final profile = Storage.userProfile;
+    final profile = readServerProfile();
     if (profile == null) return false;
     if (profile.currentWeightKg <= 0 || profile.goalWeightKg <= 0) {
       return false;
@@ -362,9 +363,6 @@ class _MoreViewState extends State<MoreView> {
           InkWell(
             onTap: () async {
               await context.router.push(EditGoalRoute());
-              if (context.mounted) {
-                await context.read<MoreCubit>().loadMoreData();
-              }
             },
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -453,44 +451,6 @@ class _MoreViewState extends State<MoreView> {
                   Expanded(
                     child: Text(
                       'Pantry',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey[900],
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    color: Colors.grey[400],
-                    size: 16,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(left: 56),
-            height: 1,
-            color: Colors.grey[200],
-          ),
-          InkWell(
-            onTap: () {
-              context.router.push(const NotificationSettingsRoute());
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.notifications_active_outlined,
-                    color: Colors.grey[700],
-                    size: 20,
-                  ),
-                  const Gap(16),
-                  Expanded(
-                    child: Text(
-                      'Notifications',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,

@@ -22,7 +22,6 @@ import '../more/presentation/pages/more_page.dart';
 import '../more/presentation/pages/edit_profile_page.dart';
 import '../more/presentation/pages/edit_goal_page.dart';
 import '../more/presentation/pages/user_profile_page.dart';
-import '../more/presentation/pages/notification_settings_page.dart';
 
 import '../nutrition/presentation/pages/nutrition_page.dart';
 import '../progress/presentation/pages/progress_page.dart';
@@ -34,12 +33,13 @@ import '../exercise/presentation/pages/exercise_add_log_page.dart';
 import '../exercise/presentation/pages/exercise_history_page.dart';
 import '../exercise/presentation/pages/exercise_form_page.dart';
 import '../water_log/presentation/pages/water_log_page.dart';
+import '../notifications/presentation/pages/notifications_page.dart';
 import 'main_page.dart';
 import 'splash_page.dart';
 
 part 'app_router.gr.dart';
 
-/// Root navigator for OS notification taps and other global navigation.
+/// Root navigator for global navigation.
 final GlobalKey<NavigatorState> appRootNavigatorKey = GlobalKey<NavigatorState>();
 
 @singleton
@@ -68,11 +68,6 @@ class AppRouter extends _$AppRouter {
     AutoRoute(
       page: EditGoalRoute.page,
       path: '/edit-goal',
-      guards: [AuthGuard()],
-    ),
-    AutoRoute(
-      page: NotificationSettingsRoute.page,
-      path: '/notifications/settings',
       guards: [AuthGuard()],
     ),
     AutoRoute(
@@ -152,6 +147,11 @@ class AppRouter extends _$AppRouter {
     AutoRoute(
       page: WaterLogRoute.page,
       path: '/water-log',
+      guards: [AuthGuard()],
+    ),
+    AutoRoute(
+      page: NotificationsRoute.page,
+      path: '/notifications',
       guards: [AuthGuard()],
     ),
   ];

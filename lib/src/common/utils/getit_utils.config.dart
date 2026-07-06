@@ -14,10 +14,6 @@ import 'package:caloriecounter/src/core/data/remote/services/api_service.dart'
     as _i354;
 import 'package:caloriecounter/src/core/data/remote/services/firebase_module.dart'
     as _i81;
-import 'package:caloriecounter/src/core/notifications/push_notification_repository.dart'
-    as _i773;
-import 'package:caloriecounter/src/core/notifications/push_notification_service.dart'
-    as _i664;
 import 'package:caloriecounter/src/modules/add/presentation/application/add_cubit/add_cubit.dart'
     as _i666;
 import 'package:caloriecounter/src/modules/app/app_router.dart' as _i440;
@@ -31,6 +27,8 @@ import 'package:caloriecounter/src/modules/auth/domain/repository/onboarding_rep
     as _i445;
 import 'package:caloriecounter/src/modules/auth/presentation/application/cubit/auth_cubit.dart'
     as _i546;
+import 'package:caloriecounter/src/modules/auth/presentation/application/cubit/user_profile_cubit.dart'
+    as _i32;
 import 'package:caloriecounter/src/modules/calorie_counter/data/repository/calorie_repository_impl.dart'
     as _i938;
 import 'package:caloriecounter/src/modules/calorie_counter/domain/repository/calorie_repository.dart'
@@ -67,10 +65,14 @@ import 'package:caloriecounter/src/modules/logfood/domain/repository/food_reposi
     as _i663;
 import 'package:caloriecounter/src/modules/logfood/domain/repository/logfood_repo.dart'
     as _i828;
+import 'package:caloriecounter/src/modules/logfood/presentation/application/cubit/ingredient_vision_cubit.dart'
+    as _i457;
 import 'package:caloriecounter/src/modules/logfood/presentation/application/cubit/logfood_cubit.dart'
     as _i485;
 import 'package:caloriecounter/src/modules/logfood/presentation/application/cubit/logfood_page_cubit.dart'
     as _i164;
+import 'package:caloriecounter/src/modules/logfood/presentation/application/cubit/staple_foods_cubit.dart'
+    as _i117;
 import 'package:caloriecounter/src/modules/more/data/repository/more_repo_impl.dart'
     as _i964;
 import 'package:caloriecounter/src/modules/more/domain/repository/more_repo.dart'
@@ -79,8 +81,12 @@ import 'package:caloriecounter/src/modules/more/presentation/application/edit_pr
     as _i148;
 import 'package:caloriecounter/src/modules/more/presentation/application/more_cubit/more_cubit.dart'
     as _i29;
-import 'package:caloriecounter/src/modules/more/presentation/application/notification_settings_cubit/notification_settings_cubit.dart'
-    as _i602;
+import 'package:caloriecounter/src/modules/notifications/data/notification_repository_impl.dart'
+    as _i686;
+import 'package:caloriecounter/src/modules/notifications/domain/repository/notification_repository.dart'
+    as _i159;
+import 'package:caloriecounter/src/modules/notifications/presentation/application/notifications_cubit.dart'
+    as _i750;
 import 'package:caloriecounter/src/modules/nutrition/data/repository/food_detail_repository_impl.dart'
     as _i459;
 import 'package:caloriecounter/src/modules/nutrition/data/repository/nutrient_detail_repository_impl.dart'
@@ -137,6 +143,8 @@ import 'package:caloriecounter/src/modules/weight_form/domain/repository/weightF
     as _i157;
 import 'package:caloriecounter/src/modules/weight_form/presentation/application/cubit/weightForm_cubit.dart'
     as _i673;
+import 'package:caloriecounter/src/modules/weight_form/presentation/application/weight_form_event_bus.dart'
+    as _i354;
 import 'package:cloud_firestore/cloud_firestore.dart' as _i974;
 import 'package:dio/dio.dart' as _i361;
 import 'package:firebase_auth/firebase_auth.dart' as _i59;
@@ -159,6 +167,7 @@ extension GetItInjectableX on _i174.GetIt {
     final loggerModule = _$LoggerModule();
     final firebaseModule = _$FirebaseModule();
     final apiModule = _$ApiModule();
+    gh.factory<_i354.WeightFormEventBus>(() => _i354.WeightFormEventBus());
     gh.singleton<_i207.Talker>(() => loggerModule.talker());
     gh.singleton<_i666.AddCubit>(() => _i666.AddCubit());
     gh.singleton<_i440.AppRouter>(() => _i440.AppRouter());
@@ -173,22 +182,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i575.RatingService>(() => _i575.RatingServiceImpl());
     gh.lazySingleton<_i985.DailyNutritionCalculationService>(
         () => _i985.DailyNutritionCalculationServiceImpl());
-    gh.lazySingleton<_i773.PushNotificationRepository>(
-        () => _i773.PushNotificationRepository(gh<InvalidType>()));
     gh.factory<String>(
       () => apiModule.baseUrl,
       instanceName: 'baseUrl',
     );
-    gh.factory<_i602.NotificationSettingsCubit>(() =>
-        _i602.NotificationSettingsCubit(
-            gh<_i773.PushNotificationRepository>()));
     gh.lazySingleton<_i413.DailyNutritionCalculator>(
         () => _i413.DailyNutritionCalculatorImpl());
-    gh.lazySingleton<_i664.PushNotificationService>(
-        () => _i664.PushNotificationService(
-              gh<_i773.PushNotificationRepository>(),
-              gh<_i440.AppRouter>(),
-            ));
     gh.lazySingleton<_i44.FoodNutrientProcessorService>(() =>
         _i44.FoodNutrientProcessorServiceImpl(
             gh<_i409.NutrientExtractorService>()));
@@ -196,10 +195,10 @@ extension GetItInjectableX on _i174.GetIt {
           gh<String>(instanceName: 'baseUrl'),
           gh<_i207.Talker>(),
         ));
-    gh.lazySingleton<_i250.NutritionApiService>(
-        () => _i250.NutritionApiServiceImpl(gh<_i361.Dio>()));
     gh.factory<_i468.MoreRepository>(
         () => _i964.MoreRepositoryImpl(gh<_i361.Dio>()));
+    gh.lazySingleton<_i250.NutritionApiService>(
+        () => _i250.NutritionApiServiceImpl(gh<_i361.Dio>()));
     gh.lazySingleton<_i663.FoodRepository>(
         () => _i811.FoodRepositoryImpl(gh<_i361.Dio>()));
     gh.lazySingleton<_i828.LogFoodRepository>(
@@ -214,6 +213,8 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i967.AuthRepositoryImpl(gh<_i361.Dio>()));
     gh.factory<_i573.ProgressRepository>(
         () => _i522.ProcessRepositoryImpl(gh<_i361.Dio>()));
+    gh.lazySingleton<_i159.NotificationRepository>(
+        () => _i686.NotificationRepositoryImpl(gh<_i361.Dio>()));
     gh.lazySingleton<_i572.CalorieRepository>(
         () => _i938.CalorieRepositoryImpl(gh<_i361.Dio>()));
     gh.lazySingleton<_i82.WaterLogRepository>(
@@ -238,12 +239,16 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i89.FoodApiServiceImpl(gh<_i361.Dio>()));
     gh.lazySingleton<_i959.FoodDetailRepository>(
         () => _i459.FoodDetailRepositoryImpl(gh<_i361.Dio>()));
+    gh.lazySingleton<_i32.UserProfileCubit>(
+        () => _i32.UserProfileCubit(gh<_i609.AuthRepository>()));
     gh.factory<_i84.WaterLogCubit>(
         () => _i84.WaterLogCubit(gh<_i82.WaterLogRepository>()));
     gh.singleton<_i32.CalorieCubit>(
         () => _i32.CalorieCubit(gh<_i572.CalorieRepository>()));
-    gh.singleton<_i673.WeightFormCubit>(() => _i673.WeightFormCubit(
-        weightFormRepository: gh<_i157.WeightFormRepository>()));
+    gh.factory<_i457.IngredientVisionCubit>(
+        () => _i457.IngredientVisionCubit(gh<_i663.FoodRepository>()));
+    gh.factory<_i117.StapleFoodsCubit>(
+        () => _i117.StapleFoodsCubit(gh<_i663.FoodRepository>()));
     gh.singleton<_i131.ProgressCubit>(
         () => _i131.ProgressCubit(gh<_i573.ProgressRepository>()));
     gh.lazySingleton<_i678.NutrientDetailRepository>(
@@ -255,24 +260,31 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i306.DashboardRepository>(),
           gh<_i82.WaterLogRepository>(),
         ));
+    gh.singleton<_i29.MoreCubit>(() => _i29.MoreCubit(
+          gh<_i609.AuthRepository>(),
+          gh<_i495.ProgressTrendsRepository>(),
+          gh<_i32.UserProfileCubit>(),
+        ));
     gh.singleton<_i776.DiaryCubit>(
         () => _i776.DiaryCubit(gh<_i652.DiaryRepository>()));
     gh.singleton<_i409.FoodDetailCubit>(
         () => _i409.FoodDetailCubit(gh<_i959.FoodDetailRepository>()));
     gh.singleton<_i485.LogFoodCubit>(() =>
         _i485.LogFoodCubit(logFoodRepository: gh<_i828.LogFoodRepository>()));
-    gh.singleton<_i29.MoreCubit>(() => _i29.MoreCubit(
-          gh<_i609.AuthRepository>(),
-          gh<_i495.ProgressTrendsRepository>(),
-        ));
     gh.factory<_i148.EditProfileCubit>(() => _i148.EditProfileCubit(
           gh<_i609.AuthRepository>(),
           gh<_i29.MoreCubit>(),
         ));
     gh.singleton<_i499.ProgressTrendsCubit>(
         () => _i499.ProgressTrendsCubit(gh<_i495.ProgressTrendsRepository>()));
+    gh.lazySingleton<_i750.NotificationsCubit>(
+        () => _i750.NotificationsCubit(gh<_i159.NotificationRepository>()));
     gh.singleton<_i196.ExerciseCubit>(
         () => _i196.ExerciseCubit(gh<_i662.ExerciseRepository>()));
+    gh.singleton<_i673.WeightFormCubit>(() => _i673.WeightFormCubit(
+          weightFormRepository: gh<_i157.WeightFormRepository>(),
+          eventBus: gh<_i354.WeightFormEventBus>(),
+        ));
     gh.singleton<_i87.NutritionCubit>(
         () => _i87.NutritionCubit(gh<_i585.NutritionRepository>()));
     gh.singleton<_i444.NutrientDetailCubit>(
@@ -281,6 +293,7 @@ extension GetItInjectableX on _i174.GetIt {
           authRepository: gh<_i609.AuthRepository>(),
           onboardingRepository: gh<_i445.OnboardingRepository>(),
           moreCubit: gh<_i29.MoreCubit>(),
+          userProfileCubit: gh<_i32.UserProfileCubit>(),
         ));
     return this;
   }

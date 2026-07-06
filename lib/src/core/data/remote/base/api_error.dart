@@ -1,0 +1,103 @@
+import 'dart:io';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'api_error.freezed.dart';
+part 'api_error.g.dart';
+
+// Validation Error models
+@freezed
+class ValidationErrorDetail with _$ValidationErrorDetail {
+  const factory ValidationErrorDetail({
+    required String field,
+    required String message,
+  }) = _ValidationErrorDetail;
+
+  factory ValidationErrorDetail.fromJson(Map<String, dynamic> json) =>
+      _$ValidationErrorDetailFromJson(json);
+}
+
+@freezed
+class ApiError with _$ApiError implements Exception {
+  factory ApiError(int? code, String message) = _ApiError;
+  factory ApiError.server({int? code, required String message}) = _Server;
+  factory ApiError.network({int? code, required String message}) = _Network;
+  factory ApiError.unexpected() = _Unexpected;
+  factory ApiError.unauthorized(String message) = _Unauthorized;
+  factory ApiError.conflict({int? code, required String message}) = _Conflict;
+  factory ApiError.fromJson(Map<String, dynamic> json) =>
+      _$ApiErrorFromJson(json);
+  factory ApiError.validation({
+    required int statusCode,
+    required List<ValidationErrorDetail> errors,
+  }) = _Validation;
+
+  factory ApiError.fromConflictResponse(Map<String, dynamic> json) {
+    return ApiError.conflict(
+      code: json['status'] as int?,
+      message: json['detail'] as String? ?? 'Conflict error',
+    );
+  }
+  ApiError._();
+
+  String get message {
+    return maybeWhen(
+      orElse: () => 'Error unexpected',
+      (code, message) => message,
+      server: (code, message) => message,
+      network: (_, message) => message,
+      unauthorized: (message) => message,
+      conflict: (code, message) => message,
+      validation: (statusCode, errors) {
+        if (errors.isNotEmpty) {
+          // Trả về message của error đầu tiên
+          return errors.first.message;
+        }
+        return 'Validation error';
+      },
+    );
+  }
+
+  int get statusCode {
+    return maybeWhen(
+      orElse: () => -1,
+      (code, message) => code ?? -1,
+      server: (code, message) => code ?? -1,
+      network: (code, message) => code ?? -1,
+      conflict: (code, message) => code ?? -1,
+      unauthorized: (_) => 401,
+    );
+  }
+
+  String get title => maybeWhen(
+    (code, message) => 'Error',
+    unauthorized: (message) => 'Error unauthorized',
+    conflict: (code, message) => 'Conflict',
+    network: (code, __) => code == HttpStatus.internalServerError
+        ? 'Error internal server'
+        : 'Error',
+    validation: (_, __) => 'Validation Error',
+    orElse: () => 'Error',
+  );
+
+  // Helper method để lấy validation errors
+  List<ValidationErrorDetail> get validationErrors => maybeWhen(
+    (code, message) => <ValidationErrorDetail>[],
+    validation: (_, errors) => errors,
+    orElse: () => [],
+  );
+
+  // Helper method để lấy validation error cho một field cụ thể
+  String? getValidationError(String field) {
+    return maybeWhen(
+      (code, message) => null,
+      validation: (_, errors) {
+        final error = errors.firstWhere(
+          (e) => e.field == field,
+          orElse: () => const ValidationErrorDetail(field: '', message: ''),
+        );
+        return error.message.isNotEmpty ? error.message : null;
+      },
+      orElse: () => null,
+    );
+  }
+}

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:caloriecounter/src/modules/auth/data/models/local_user_identity.dart';
 import 'package:caloriecounter/src/modules/auth/data/models/user_profile_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -15,6 +16,8 @@ class _Keys {
   static const ratingShown = 'rating_shown';
   static const logSuccessCount = 'log_success_count';
   static const lastRatingPromptLogCount = 'last_rating_prompt_log_count';
+  static const aiUsageCount = 'ai_usage_count';
+  static const lastRatingPromptAiCount = 'last_rating_prompt_ai_count';
   static const userID = 'user_id';
   static const userProfile = 'user_profile';
   static const isProfileComplete = 'is_profile_complete';
@@ -37,6 +40,7 @@ class Storage {
       // disable logging when running in release mode.
       kReleaseMode ? null : const RxSharedPreferencesDefaultLogger(),
     );
+    await migrateLegacyUserProfileIfNeeded();
   }
 
   static T? _get<T>(String key) => _prefs.get(key).asOrNull<T>();
@@ -65,6 +69,12 @@ class Storage {
       return notify
           ? _rxPrefs.setStringList(key, val)
           : _prefs.setStringList(key, val);
+    }
+    if (val is LocalUserIdentity) {
+      final jsonString = jsonEncode(val.toJson());
+      return notify
+          ? _rxPrefs.setString(key, jsonString)
+          : _prefs.setString(key, jsonString);
     }
     if (val is UserProfileModel) {
       final jsonString = jsonEncode(val.toJson());
@@ -119,25 +129,89 @@ class Storage {
   static int? get lastRatingPromptLogCount =>
       _get(_Keys.lastRatingPromptLogCount);
 
+  static Future setAiUsageCount(int val) => _set(_Keys.aiUsageCount, val);
+
+  static int get aiUsageCount => _get(_Keys.aiUsageCount) ?? 0;
+
+  static Future setLastRatingPromptAiCount(int val) =>
+      _set(_Keys.lastRatingPromptAiCount, val);
+
+  static int? get lastRatingPromptAiCount =>
+      _get(_Keys.lastRatingPromptAiCount);
+
   static Future setUserID(int? val) => _set(_Keys.userID, val);
 
   static int? get userID => _get(_Keys.userID);
 
-  static Future setUserProfile(UserProfileModel? val) =>
+  static Future setUserIdentity(LocalUserIdentity? val) =>
       _set(_Keys.userProfile, val);
 
-  static UserProfileModel? get userProfile {
+  static LocalUserIdentity? get userIdentity {
     final jsonString = _get<String>(_Keys.userProfile);
     if (jsonString == null) return null;
 
     try {
       final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
-      return UserProfileModel.fromJson(jsonMap);
+      return LocalUserIdentity.fromJson(jsonMap);
     } catch (e) {
       if (kDebugMode) {
-        print('Error parsing user profile from storage: $e');
+        print('Error parsing user identity from storage: $e');
       }
       return null;
+    }
+  }
+
+  /// Persists identity fields only. Dynamic nutrition data lives in [UserProfileCubit].
+  static Future setUserProfile(UserProfileModel? val) async {
+    if (val == null) {
+      await setUserIdentity(null);
+      return;
+    }
+    await setUserIdentity(
+      LocalUserIdentity(
+        email: val.email,
+        displayName: val.displayName,
+        avatarUrl: val.avatarUrl,
+        isProfileComplete: val.isProfileComplete,
+      ),
+    );
+    await setIsProfileComplete(val.isProfileComplete);
+  }
+
+  /// Identity-only snapshot for unmigrated call sites. Macros/thresholds are empty until cubit loads.
+  static UserProfileModel? get userProfile {
+    final identity = userIdentity;
+    if (identity == null) return null;
+    return UserProfileModel(
+      displayName: identity.displayName,
+      email: identity.email,
+      avatarUrl: identity.avatarUrl,
+      isProfileComplete: identity.isProfileComplete,
+    );
+  }
+
+  static Future<void> migrateLegacyUserProfileIfNeeded() async {
+    final jsonString = _get<String>(_Keys.userProfile);
+    if (jsonString == null) return;
+    try {
+      final map = jsonDecode(jsonString) as Map<String, dynamic>;
+      if (!map.containsKey('dailyCalorieTarget') &&
+          !map.containsKey('nutritionalThresholds') &&
+          !map.containsKey('macroCarbsG')) {
+        return;
+      }
+      final identity = LocalUserIdentity(
+        email: map['email'] as String? ?? '',
+        displayName: map['displayName'] as String?,
+        avatarUrl: map['avatarUrl'] as String?,
+        isProfileComplete: map['isProfileComplete'] as bool? ?? false,
+      );
+      await setUserIdentity(identity);
+      await setIsProfileComplete(identity.isProfileComplete);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Legacy user profile migration failed: $e');
+      }
     }
   }
 

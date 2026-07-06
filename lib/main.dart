@@ -21,10 +21,11 @@ import 'src/common/utils/getit_utils.dart';
 import 'src/common/utils/app_environment.dart';
 import 'src/core/data/local/storage.dart';
 import 'src/core/notifications/meal_log_reminder_service.dart';
-import 'src/core/notifications/push_notification_service.dart';
+import 'src/modules/notifications/presentation/application/notifications_cubit.dart';
 import 'src/core/recipe/recipe_generation_coordinator.dart';
 import 'src/modules/app/app_router.dart';
 import 'src/modules/auth/presentation/application/cubit/auth_cubit.dart';
+import 'src/modules/auth/presentation/application/cubit/user_profile_cubit.dart';
 import 'src/modules/calorie_counter/presentation/application/calorie_cubit/calorie_cubit.dart';
 import 'src/modules/diary/presentation/application/diary_cubit/diary_cubit.dart';
 import 'src/modules/logfood/presentation/application/cubit/logfood_cubit.dart';
@@ -152,8 +153,6 @@ void main() async {
       WidgetsFlutterBinding.ensureInitialized();
       await AppEnvironment.setup();
       await Storage.setup();
-      await GetItUtils.setup();
-      // Setup GetIt dependencies
       await getIt.reset();
       configureDependencies();
       final talker = getIt<Talker>();
@@ -161,15 +160,14 @@ void main() async {
 
       Bloc.observer = TalkerBlocObserver(talker: talker);
       await MealLogReminderService.instance.init();
-      // Keep local meal reminders as a fallback until push preference caching is available.
       unawaited(MealLogReminderService.instance.scheduleRollingWindow());
-      unawaited(getIt<PushNotificationService>().init());
 
       runApp(
         OnlyOnePointerRecognizerWidget(
           child: MultiBlocProvider(
             providers: [
               BlocProvider.value(value: getIt<AuthCubit>()),
+              BlocProvider.value(value: getIt<UserProfileCubit>()),
               BlocProvider.value(value: getIt<CalorieCubit>()),
               BlocProvider.value(value: getIt<MoreCubit>()),
               BlocProvider.value(value: getIt<DiaryCubit>()),
@@ -185,6 +183,7 @@ void main() async {
               BlocProvider.value(value: getIt<ExerciseCubit>()),
               BlocProvider.value(value: getIt<DashboardCubit>()),
               BlocProvider.value(value: getIt<WaterLogCubit>()),
+              BlocProvider.value(value: getIt<NotificationsCubit>()),
             ],
             child: const MyApp(),
           ),
@@ -226,7 +225,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     RecipeGenerationCoordinator.instance.updateLifecycle(state);
     if (state == AppLifecycleState.resumed) {
       unawaited(MealLogReminderService.instance.scheduleRollingWindow());
-      unawaited(getIt<PushNotificationService>().registerCurrentToken());
+      if (Storage.userID != null) {
+        unawaited(getIt<NotificationsCubit>().refresh());
+        unawaited(getIt<UserProfileCubit>().refresh());
+      }
     }
   }
 

@@ -166,10 +166,10 @@ abstract class _$AppRouter extends RootStackRouter {
         child: const MorePage(),
       );
     },
-    NotificationSettingsRoute.name: (routeData) {
+    NotificationsRoute.name: (routeData) {
       return AutoRoutePage<dynamic>(
         routeData: routeData,
-        child: const NotificationSettingsPage(),
+        child: const NotificationsPage(),
       );
     },
     NutritionRoute.name: (routeData) {
@@ -737,15 +737,15 @@ class MoreRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
-/// [NotificationSettingsPage]
-class NotificationSettingsRoute extends PageRouteInfo<void> {
-  const NotificationSettingsRoute({List<PageRouteInfo>? children})
+/// [NotificationsPage]
+class NotificationsRoute extends PageRouteInfo<void> {
+  const NotificationsRoute({List<PageRouteInfo>? children})
       : super(
-          NotificationSettingsRoute.name,
+          NotificationsRoute.name,
           initialChildren: children,
         );
 
-  static const String name = 'NotificationSettingsRoute';
+  static const String name = 'NotificationsRoute';
 
   static const PageInfo<void> page = PageInfo<void>(name);
 }

@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "525953762066",
+    "project_id": "scancoin-e851d",
+    "storage_bucket": "scancoin-e851d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:525953762066:android:edece017362e246b5ce9cb",
+        "android_client_info": {
+          "package_name": "com.trietngan.caloriecounter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "525953762066-scdiedhsrg64ftudcgg4tpodsn1ah952.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.trietngan.caloriecounter",
+            "certificate_hash": "a84c46ef59bb8d6bd5e274e1470a0960a77e4097"
+          }
+        },
+        {
+          "client_id": "525953762066-n6nrmu7vupf7qfrtf09b80vrok014ngv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDroqgjSPfhIoYskIiHMRLL2EDDd21tcvg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "525953762066-n6nrmu7vupf7qfrtf09b80vrok014ngv.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "525953762066-nls8r0lb1jpip467fikmo0kvppul92bi.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.trietngan.caloriecounter"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
