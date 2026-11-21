@@ -32,7 +32,7 @@ TypeScript, Expo development build, Expo Router, TanStack Query, Expo SecureStor
 | Từ chối quyền ảnh, hủy chọn hoặc upload lỗi | Không gửi URL rỗng, người dùng có thể thử lại | 3, 7 |
 | Job AI hoàn thành khi app ở nền | Khôi phục đúng trạng thái khi quay lại, tránh báo trùng | 7, 8 |
 
-## 1. Nền ứng dụng và phiên đăng nhập
+### Task 1: Nền ứng dụng và phiên đăng nhập
 
 **Tệp**
 `mobile-rn/app.config.ts`, `mobile-rn/app/_layout.tsx`, `mobile-rn/app/(auth)/sign-in.tsx`, `mobile-rn/app/(tabs)/_layout.tsx`, `mobile-rn/src/lib/api-client.ts`, `mobile-rn/src/lib/session-store.ts`, `mobile-rn/src/features/account/api.ts`, `mobile-rn/src/lib/__tests__/api-client.test.ts`.
@@ -46,7 +46,7 @@ TypeScript, Expo development build, Expo Router, TanStack Query, Expo SecureStor
 - [ ] Chạy `npm test -- --runInBand api-client` và `npm run typecheck`. Kiểm tra mở lại app giữ phiên.
 - [ ] Xác minh cấu hình Android/iOS, Firebase và nhà cung cấp đăng nhập cho định danh phát triển. Ghi commit cho nền ứng dụng.
 
-## 2. Đăng nhập → Nhật ký → Ghi món → Tổng quan
+### Task 2: Đăng nhập → Nhật ký → Ghi món → Tổng quan
 
 **Tệp**
 `mobile-rn/app/(tabs)/index.tsx`, `mobile-rn/app/(tabs)/diary.tsx`, `mobile-rn/app/food/search.tsx`, `mobile-rn/src/lib/local-date.ts`, `mobile-rn/src/features/diary/api.ts`, `mobile-rn/src/features/diary/__tests__/log-flow.test.tsx`.
@@ -59,7 +59,7 @@ TypeScript, Expo development build, Expo Router, TanStack Query, Expo SecureStor
 - [ ] Chạy `npm test -- --runInBand log-flow` và `npm run typecheck`. Thử cùng một tài khoản trên Flutter và RN, đối chiếu mục ghi và tổng calo.
 - [ ] Ghi commit cho luồng xuyên suốt.
 
-## 3. Hoàn tất tài khoản, hồ sơ và mục tiêu
+### Task 3: Hoàn tất tài khoản, hồ sơ và mục tiêu
 
 **Tệp**
 `mobile-rn/app/(auth)/`, `mobile-rn/app/(tabs)/more.tsx`, `mobile-rn/app/profile/`, `mobile-rn/src/features/account/api.ts`, `mobile-rn/src/features/profile/api.ts`, `mobile-rn/src/lib/media-upload.ts`, `mobile-rn/src/features/profile/__tests__/profile.test.tsx`.
@@ -73,7 +73,7 @@ TypeScript, Expo development build, Expo Router, TanStack Query, Expo SecureStor
 - [ ] Chạy `npm test -- --runInBand profile` và `npm run typecheck`. Thử Google/Apple, tải ảnh và xóa tài khoản thử có thể bỏ.
 - [ ] Ghi commit cho tài khoản, hồ sơ và mục tiêu.
 
-## 4. Hoàn tất nhật ký, thực phẩm và bữa ăn
+### Task 4: Hoàn tất nhật ký, thực phẩm và bữa ăn
 
 **Tệp**
 `mobile-rn/app/diary/`, `mobile-rn/app/food/`, `mobile-rn/app/meals/`, `mobile-rn/src/features/food/api.ts`, `mobile-rn/src/features/food/__tests__/meal-log.test.tsx`.
@@ -83,7 +83,7 @@ TypeScript, Expo development build, Expo Router, TanStack Query, Expo SecureStor
 - [ ] Chuyển thực phẩm và bữa ăn riêng qua `api/Food` và `api/Meal`, gồm danh sách gợi ý, thực phẩm gần đây, thêm/sửa/xóa và lưu lại để tái sử dụng theo Flutter.
 - [ ] Chạy `npm test -- --runInBand meal-log` và `npm run typecheck`. So sánh trên cùng tài khoản và ghi commit.
 
-## 5. Dinh dưỡng, nước và phần còn lại của Tổng quan
+### Task 5: Dinh dưỡng, nước và phần còn lại của Tổng quan
 
 **Tệp**
 `mobile-rn/app/nutrition/`, `mobile-rn/app/water.tsx`, `mobile-rn/src/features/nutrition/api.ts`, `mobile-rn/src/features/nutrition/export.ts`, `mobile-rn/src/features/water/api.ts`, `mobile-rn/src/features/nutrition/__tests__/nutrition-water.test.tsx`.
@@ -93,7 +93,7 @@ TypeScript, Expo development build, Expo Router, TanStack Query, Expo SecureStor
 - [ ] Chuyển API và giao diện nước theo `water_log_repository_impl.dart`. Nối lại thẻ tổng quan, lối tắt và gợi ý thông qua `api/dashboard/today/suggestion`.
 - [ ] Chạy `npm test -- --runInBand nutrition-water` và `npm run typecheck`. Mở CSV từ màn hình chia sẻ và đối chiếu bản tổng quan sau khi ghi nước. Ghi commit.
 
-## 6. Cân nặng, tiến độ và tập luyện
+### Task 6: Cân nặng, tiến độ và tập luyện
 
 **Tệp**
 `mobile-rn/app/(tabs)/progress.tsx`, `mobile-rn/app/weight/`, `mobile-rn/app/exercise/`, `mobile-rn/src/features/progress/api.ts`, `mobile-rn/src/features/exercise/api.ts`, `mobile-rn/src/features/progress/__tests__/progress-exercise.test.tsx`.
@@ -103,7 +103,7 @@ TypeScript, Expo development build, Expo Router, TanStack Query, Expo SecureStor
 - [ ] Chuyển danh mục bài tập, tạo/sửa/xóa bài tập riêng, ghi buổi tập và lịch sử qua `api/exercises` và `api/exercise-logs`.
 - [ ] Chạy `npm test -- --runInBand progress-exercise` và `npm run typecheck`. So sánh lịch sử và biểu đồ giữa hai bản. Ghi commit.
 
-## 7. Công thức AI và tủ thực phẩm
+### Task 7: Công thức AI và tủ thực phẩm
 
 **Tệp**
 `mobile-rn/app/recipes/`, `mobile-rn/app/pantry.tsx`, `mobile-rn/src/features/recipes/api.ts`, `mobile-rn/src/features/recipes/jobs.ts`, `mobile-rn/src/features/recipes/__tests__/recipe-jobs.test.tsx`.
@@ -113,7 +113,7 @@ TypeScript, Expo development build, Expo Router, TanStack Query, Expo SecureStor
 - [ ] Chuyển `recipe-builder/staples` và luồng tạo kế hoạch, hạn mức và tùy chọn tự tạo đã có với `fridge-meal-plans`.
 - [ ] Chạy `npm test -- --runInBand recipe-jobs` và `npm run typecheck`. Thử ảnh thật, mất mạng giữa chừng và phục hồi khi mở lại app. Ghi commit.
 
-## 8. Thông báo và nghiệm thu Android/iOS
+### Task 8: Thông báo và nghiệm thu Android/iOS
 
 **Tệp**
 `mobile-rn/app/notifications.tsx`, `mobile-rn/src/features/notifications/api.ts`, `mobile-rn/src/features/notifications/reminders.ts`, `mobile-rn/src/features/notifications/__tests__/reminders.test.ts`, `mobile-rn/README.md`.
