@@ -15,6 +15,8 @@ export type OnboardingData = {
   barriers?: string[];
 };
 
+export const genderOptions = ['male', 'female'] as const;
+
 export const activityOptions = [
   ['sedentary', 'Sedentary'],
   ['light', 'Lightly active'],
