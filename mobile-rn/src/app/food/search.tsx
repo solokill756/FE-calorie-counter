@@ -6,6 +6,7 @@ import { useSession } from '../../features/account/session';
 import { createDiaryApi, type FoodPage, logFoodAndRefresh, mealLabels, meals, type Meal } from '../../features/diary/api';
 import { confirmNutritionLog } from '../../features/food/warning-dialog';
 import { nutrientFields } from '../../features/nutrition/fields';
+import { formatDisplayNumber } from '../../lib/format-display-number';
 import { localDateKey, parseLocalDate } from '../../lib/local-date';
 
 export default function SearchFood() {
@@ -79,9 +80,10 @@ function FoodPicker({ date, meal }: { date: Date; meal: Meal }) {
           <Field label="Number of servings" keyboardType="decimal-pad" value={quantity} onChangeText={setQuantity} />
           <Field label={`Serving size (${selected.servingUnit || 'serving'})`}
             keyboardType="decimal-pad" value={selectedSize} onChangeText={setSelectedSize} />
-          {nutrientFields.filter(([key]) => selected[key] != null).map(([key, , label, unit]) => (
-            <Body key={key}>{label} · {selected[key]} {unit}</Body>
-          ))}
+          {nutrientFields.map(([key, , label, unit]) => {
+            const value = selected[key];
+            return value == null ? null : <Body key={key}>{label} · {formatDisplayNumber(value)} {unit}</Body>;
+          })}
           <Message error={save.error} />
           <Action title={save.isPending ? 'Saving…' : 'Add to diary'} disabled={!canSave || save.isPending}
             onPress={() => save.mutate({ food: selected, amount, size })} />
@@ -96,7 +98,7 @@ function FoodPicker({ date, meal }: { date: Date; meal: Meal }) {
       {results.map((food) => (
         <Card key={food.id}>
           <Body>{food.description}{food.brandName ? ` · ${food.brandName}` : ''}</Body>
-          {food.calories != null && <Body>{food.calories} kcal</Body>}
+          {food.calories != null && <Body>{formatDisplayNumber(food.calories)} kcal</Body>}
           <Action title="Select" disabled={save.isPending} onPress={() => select(food)} />
         </Card>
       ))}

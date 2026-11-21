@@ -5,6 +5,7 @@ import { Alert, StyleSheet, View } from 'react-native';
 import { Action, Body, Card, Field, Loading, Message, Screen } from '../../components/ui';
 import { useSession } from '../../features/account/session';
 import { createDiaryApi, entriesForMeal, entryName, mealLabels, meals, refreshDiaryViews } from '../../features/diary/api';
+import { formatDisplayNumber } from '../../lib/format-display-number';
 import { localDateKey, nextDate, parseLocalDate } from '../../lib/local-date';
 
 export default function Diary() {
@@ -47,7 +48,7 @@ export default function Diary() {
       <Message error={error} retry={() => void refetch()} />
       <Message error={remove.error ?? update.error} />
       {data && <>
-        <Body>{data.totalCalories} kcal logged</Body>
+        <Body>{formatDisplayNumber(data.totalCalories)} kcal logged</Body>
         {meals.map((meal) => {
           const entries = entriesForMeal(data, meal);
           return (
@@ -56,7 +57,7 @@ export default function Diary() {
               {entries.length === 0 && <Body>No foods logged.</Body>}
               {entries.map((entry) => (
                 <View key={entry.id} style={styles.entry}>
-                  <Body>{entryName(entry)} · {entry.calories ?? 0} kcal</Body>
+                  <Body>{entryName(entry)} · {formatDisplayNumber(entry.calories ?? 0)} kcal</Body>
                   <Action title="Remove" disabled={remove.isPending}
                     onPress={() => confirmRemoval(entry.id, entryName(entry))} />
                 </View>

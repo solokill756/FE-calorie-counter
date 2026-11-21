@@ -8,6 +8,7 @@ import { useSession } from '../../features/account/session';
 import { createDiaryApi, meals, refreshDiaryViews } from '../../features/diary/api';
 import { createFoodApi, scaledMealNutrients, type SavedMeal } from '../../features/food/api';
 import { confirmNutritionLog } from '../../features/food/warning-dialog';
+import { formatDisplayNumber } from '../../lib/format-display-number';
 import { parseLocalDate } from '../../lib/local-date';
 import { pickImage, uploadImage } from '../../lib/media-upload';
 
@@ -100,7 +101,7 @@ export default function SavedMeals() {
         {mealId && editing !== 'new' && <>
           <Field label="Quantity for next add or update" value={amount} onChangeText={setAmount} keyboardType="decimal-pad" />
           {editing.items.map((item) => <Card key={item.id}>
-            <Body>{item.food?.description ?? 'Food'} · {item.quantity} {item.unit}</Body>
+            <Body>{item.food?.description ?? 'Food'} · {formatDisplayNumber(item.quantity)} {item.unit}</Body>
             <Action title="Update quantity" disabled={modifyItem.isPending || !Number.isFinite(quantity) || quantity <= 0}
               onPress={() => modifyItem.mutate(() => service.updateMealItem(mealId, item.id, quantity))} />
             <Action title="Remove from meal" disabled={modifyItem.isPending}
@@ -121,7 +122,7 @@ export default function SavedMeals() {
       <Message error={deleteMeal.error ?? addToDiary.error} />
       {saved.data?.items.length === 0 && <Body>No saved meals.</Body>}
       {saved.data?.items.map((item) => <Card key={item.id}>
-        <Body>{item.name} · {item.nutritionSummary?.calories ?? 0} kcal</Body>
+        <Body>{item.name} · {formatDisplayNumber(item.nutritionSummary?.calories ?? 0)} kcal</Body>
         {date && slot && <Action title="Log meal" disabled={addToDiary.isPending || !item.items.length || !Number.isFinite(servingCount) || servingCount <= 0}
           onPress={() => addToDiary.mutate(item)} />}
         <Action title="Edit meal" onPress={() => start(item)} />

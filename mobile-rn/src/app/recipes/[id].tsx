@@ -4,6 +4,7 @@ import { Image } from 'react-native';
 import { Body, Card, Loading, Message, Screen } from '../../components/ui';
 import { useSession } from '../../features/account/session';
 import { createRecipeApi } from '../../features/recipes/api';
+import { formatDisplayNumber } from '../../lib/format-display-number';
 
 export default function RecipeDetail() {
   const { api } = useSession();
@@ -31,7 +32,7 @@ export default function RecipeDetail() {
         <Card>
           <Body>Ingredients</Body>
           {item.ingredients.map((ingredient, index) => <Body key={index}>
-            {ingredient.name} · {ingredient.quantity} {ingredient.unit}
+            {ingredient.name} · {formatDisplayNumber(ingredient.quantity)} {ingredient.unit}
           </Body>)}
         </Card>
         <Card>

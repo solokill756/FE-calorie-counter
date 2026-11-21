@@ -5,6 +5,7 @@ import { Action, Body, Card, Field, Loading, Message, Screen } from '../../compo
 import { useSession } from '../../features/account/session';
 import { createFoodApi, type FoodDetails } from '../../features/food/api';
 import { nutrientFields } from '../../features/nutrition/fields';
+import { formatDisplayNumber } from '../../lib/format-display-number';
 
 export default function MyFoods() {
   const { api } = useSession();
@@ -27,7 +28,7 @@ export default function MyFoods() {
       <Message error={remove.error} />
       {foods.data?.items.map((food) => (
         <Card key={food.id}>
-          <Body>{food.description} · {food.calories ?? 0} kcal</Body>
+          <Body>{food.description} · {formatDisplayNumber(food.calories ?? 0)} kcal</Body>
           <Action title="Edit food" onPress={() => setEditing(food)} />
           <Action title="Delete food" disabled={remove.isPending} onPress={() => {
             Alert.alert('Delete food?', food.description, [
