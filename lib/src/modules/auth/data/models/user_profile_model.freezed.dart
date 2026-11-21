@@ -24,6 +24,7 @@ mixin _$UserProfileModel {
   List<String> get goals => throw _privateConstructorUsedError;
   List<String> get barriers => throw _privateConstructorUsedError;
   List<String> get conditionTypes => throw _privateConstructorUsedError;
+  Map<String, int> get mealSplits => throw _privateConstructorUsedError;
   List<String> get healthyHabits => throw _privateConstructorUsedError;
   String get mealPlanningFrequency => throw _privateConstructorUsedError;
   bool get wantsMealPlans => throw _privateConstructorUsedError;
@@ -72,6 +73,7 @@ abstract class $UserProfileModelCopyWith<$Res> {
       List<String> goals,
       List<String> barriers,
       List<String> conditionTypes,
+      Map<String, int> mealSplits,
       List<String> healthyHabits,
       String mealPlanningFrequency,
       bool wantsMealPlans,
@@ -116,6 +118,7 @@ class _$UserProfileModelCopyWithImpl<$Res, $Val extends UserProfileModel>
     Object? goals = null,
     Object? barriers = null,
     Object? conditionTypes = null,
+    Object? mealSplits = null,
     Object? healthyHabits = null,
     Object? mealPlanningFrequency = null,
     Object? wantsMealPlans = null,
@@ -159,6 +162,10 @@ class _$UserProfileModelCopyWithImpl<$Res, $Val extends UserProfileModel>
           ? _value.conditionTypes
           : conditionTypes // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      mealSplits: null == mealSplits
+          ? _value.mealSplits
+          : mealSplits // ignore: cast_nullable_to_non_nullable
+              as Map<String, int>,
       healthyHabits: null == healthyHabits
           ? _value.healthyHabits
           : healthyHabits // ignore: cast_nullable_to_non_nullable
@@ -276,6 +283,7 @@ abstract class _$$UserProfileModelImplCopyWith<$Res>
       List<String> goals,
       List<String> barriers,
       List<String> conditionTypes,
+      Map<String, int> mealSplits,
       List<String> healthyHabits,
       String mealPlanningFrequency,
       bool wantsMealPlans,
@@ -318,6 +326,7 @@ class __$$UserProfileModelImplCopyWithImpl<$Res>
     Object? goals = null,
     Object? barriers = null,
     Object? conditionTypes = null,
+    Object? mealSplits = null,
     Object? healthyHabits = null,
     Object? mealPlanningFrequency = null,
     Object? wantsMealPlans = null,
@@ -361,6 +370,10 @@ class __$$UserProfileModelImplCopyWithImpl<$Res>
           ? _value._conditionTypes
           : conditionTypes // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      mealSplits: null == mealSplits
+          ? _value._mealSplits
+          : mealSplits // ignore: cast_nullable_to_non_nullable
+              as Map<String, int>,
       healthyHabits: null == healthyHabits
           ? _value._healthyHabits
           : healthyHabits // ignore: cast_nullable_to_non_nullable
@@ -473,6 +486,7 @@ class _$UserProfileModelImpl extends _UserProfileModel {
       final List<String> goals = const [],
       final List<String> barriers = const [],
       final List<String> conditionTypes = const [],
+      final Map<String, int> mealSplits = defaultMealSplits,
       final List<String> healthyHabits = const [],
       this.mealPlanningFrequency = '',
       this.wantsMealPlans = false,
@@ -501,6 +515,7 @@ class _$UserProfileModelImpl extends _UserProfileModel {
       : _goals = goals,
         _barriers = barriers,
         _conditionTypes = conditionTypes,
+        _mealSplits = mealSplits,
         _healthyHabits = healthyHabits,
         _nutritionalThresholds = nutritionalThresholds,
         super._();
@@ -536,6 +551,15 @@ class _$UserProfileModelImpl extends _UserProfileModel {
     if (_conditionTypes is EqualUnmodifiableListView) return _conditionTypes;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_conditionTypes);
+  }
+
+  final Map<String, int> _mealSplits;
+  @override
+  @JsonKey()
+  Map<String, int> get mealSplits {
+    if (_mealSplits is EqualUnmodifiableMapView) return _mealSplits;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_mealSplits);
   }
 
   final List<String> _healthyHabits;
@@ -635,7 +659,7 @@ class _$UserProfileModelImpl extends _UserProfileModel {
 
   @override
   String toString() {
-    return 'UserProfileModel(displayName: $displayName, goals: $goals, barriers: $barriers, conditionTypes: $conditionTypes, healthyHabits: $healthyHabits, mealPlanningFrequency: $mealPlanningFrequency, wantsMealPlans: $wantsMealPlans, activityLevel: $activityLevel, gender: $gender, age: $age, country: $country, heightCm: $heightCm, currentWeightKg: $currentWeightKg, startWeightKg: $startWeightKg, goalWeightKg: $goalWeightKg, email: $email, avatarUrl: $avatarUrl, createdAt: $createdAt, updatedAt: $updatedAt, isProfileComplete: $isProfileComplete, status: $status, dailyCalorieTarget: $dailyCalorieTarget, macroCarbsG: $macroCarbsG, macroProteinG: $macroProteinG, macroFatG: $macroFatG, macroCarbsPercent: $macroCarbsPercent, macroProteinPercent: $macroProteinPercent, macroFatPercent: $macroFatPercent, nutritionalThresholds: $nutritionalThresholds)';
+    return 'UserProfileModel(displayName: $displayName, goals: $goals, barriers: $barriers, conditionTypes: $conditionTypes, mealSplits: $mealSplits, healthyHabits: $healthyHabits, mealPlanningFrequency: $mealPlanningFrequency, wantsMealPlans: $wantsMealPlans, activityLevel: $activityLevel, gender: $gender, age: $age, country: $country, heightCm: $heightCm, currentWeightKg: $currentWeightKg, startWeightKg: $startWeightKg, goalWeightKg: $goalWeightKg, email: $email, avatarUrl: $avatarUrl, createdAt: $createdAt, updatedAt: $updatedAt, isProfileComplete: $isProfileComplete, status: $status, dailyCalorieTarget: $dailyCalorieTarget, macroCarbsG: $macroCarbsG, macroProteinG: $macroProteinG, macroFatG: $macroFatG, macroCarbsPercent: $macroCarbsPercent, macroProteinPercent: $macroProteinPercent, macroFatPercent: $macroFatPercent, nutritionalThresholds: $nutritionalThresholds)';
   }
 
   @override
@@ -649,6 +673,8 @@ class _$UserProfileModelImpl extends _UserProfileModel {
             const DeepCollectionEquality().equals(other._barriers, _barriers) &&
             const DeepCollectionEquality()
                 .equals(other._conditionTypes, _conditionTypes) &&
+            const DeepCollectionEquality()
+                .equals(other._mealSplits, _mealSplits) &&
             const DeepCollectionEquality()
                 .equals(other._healthyHabits, _healthyHabits) &&
             (identical(other.mealPlanningFrequency, mealPlanningFrequency) ||
@@ -704,6 +730,7 @@ class _$UserProfileModelImpl extends _UserProfileModel {
         const DeepCollectionEquality().hash(_goals),
         const DeepCollectionEquality().hash(_barriers),
         const DeepCollectionEquality().hash(_conditionTypes),
+        const DeepCollectionEquality().hash(_mealSplits),
         const DeepCollectionEquality().hash(_healthyHabits),
         mealPlanningFrequency,
         wantsMealPlans,
@@ -752,6 +779,7 @@ abstract class _UserProfileModel extends UserProfileModel {
           final List<String> goals,
           final List<String> barriers,
           final List<String> conditionTypes,
+          final Map<String, int> mealSplits,
           final List<String> healthyHabits,
           final String mealPlanningFrequency,
           final bool wantsMealPlans,
@@ -791,6 +819,8 @@ abstract class _UserProfileModel extends UserProfileModel {
   List<String> get barriers;
   @override
   List<String> get conditionTypes;
+  @override
+  Map<String, int> get mealSplits;
   @override
   List<String> get healthyHabits;
   @override

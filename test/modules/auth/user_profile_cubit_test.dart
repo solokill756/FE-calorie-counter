@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:caloriecounter/src/core/data/local/storage.dart';
 import 'package:caloriecounter/src/core/data/remote/base/api_error.dart';
@@ -19,7 +21,11 @@ final _serverProfile = UserProfileModel(
   dailyCalorieTarget: 2100,
   macroCarbsG: 260,
   nutritionalThresholds: [
-    const UserNutritionalThreshold(nutrient: 'sugars', maxAmount: 20, unit: 'g'),
+    const UserNutritionalThreshold(
+      nutrient: 'sugars',
+      maxAmount: 20,
+      unit: 'g',
+    ),
   ],
 );
 
@@ -43,8 +49,9 @@ void main() {
   blocTest<UserProfileCubit, UserProfileState>(
     'refresh emits loaded and updates local identity only',
     build: () {
-      when(() => authRepository.getUserProfile())
-          .thenAnswer((_) async => Success(_serverProfile));
+      when(
+        () => authRepository.getUserProfile(),
+      ).thenAnswer((_) async => Success(_serverProfile));
       return cubit;
     },
     act: (c) => c.refresh(),
@@ -67,8 +74,9 @@ void main() {
   blocTest<UserProfileCubit, UserProfileState>(
     'refresh error keeps previous profile',
     build: () {
-      when(() => authRepository.getUserProfile())
-          .thenAnswer((_) async => Failure(ApiError(500, 'network')));
+      when(
+        () => authRepository.getUserProfile(),
+      ).thenAnswer((_) async => Failure(ApiError(500, 'network')));
       return cubit;
     },
     seed: () => UserProfileState.loaded(_serverProfile),
@@ -81,5 +89,29 @@ void main() {
         );
       }),
     ],
+  );
+  test(
+    'a refresh started before a successful save cannot restore old targets',
+    () async {
+      final request = Completer<Result<UserProfileModel, ApiError>>();
+      final updated = _serverProfile.copyWith(
+        age: 35,
+        dailyCalorieTarget: 2000,
+      );
+      const changes = {'age': 35};
+      when(
+        () => authRepository.getUserProfile(),
+      ).thenAnswer((_) => request.future);
+      when(
+        () => authRepository.patchHealthProfile(changes),
+      ).thenAnswer((_) async => Success(updated));
+
+      final refresh = cubit.refresh(showLoading: true);
+      expect(await cubit.saveHealthProfile(changes), isNull);
+      request.complete(Success(_serverProfile));
+      await refresh;
+
+      expect(cubit.profileOrNull, updated);
+    },
   );
 }
