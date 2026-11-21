@@ -1,5 +1,5 @@
 import type { ApiClient } from '../../lib/api-client';
-import type { UserProfile } from '../account/api';
+import type { MealSplits, UserProfile } from '../account/api';
 
 export const goalOptions = [
   ['weight_loss', 'Lose weight'],
@@ -20,6 +20,15 @@ type ProfilePatch = {
   avatarUrl?: string;
 };
 
+export type HealthProfilePatch = {
+  age?: number;
+  gender?: string;
+  heightCm?: number;
+  conditionTypes?: string[];
+  allergies?: string[];
+  mealSplits?: MealSplits | null;
+};
+
 export function createProfileApi(api: ApiClient) {
   const updateProfile = (body: ProfilePatch) =>
     api.request<UserProfile>('users/profile', { method: 'PATCH', body });
@@ -28,6 +37,8 @@ export function createProfileApi(api: ApiClient) {
     updateProfile,
     updateProfileWithPhoto: async (body: ProfilePatch, upload: () => Promise<string>) =>
       updateProfile({ ...body, avatarUrl: await upload() }),
+    updateHealthProfile: (body: HealthProfilePatch) =>
+      api.request<UserProfile>('users/health-profile', { method: 'PATCH', body }),
     updateGoal: (goalType: GoalType) =>
       api.request<UserProfile>('users/goal', { method: 'PATCH', body: { goalType } }),
   };

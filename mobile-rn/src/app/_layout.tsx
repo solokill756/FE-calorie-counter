@@ -31,6 +31,7 @@ function Navigation() {
       <Stack.Protected guard={destination === 'tabs'}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="profile/index" options={{ title: 'Profile' }} />
+        <Stack.Screen name="profile/health" options={{ title: 'Health profile' }} />
         <Stack.Screen name="profile/goal" options={{ title: 'Goal' }} />
         <Stack.Screen name="add" options={{ title: 'Add', presentation: 'modal' }} />
         <Stack.Screen name="exercise/index" options={{ title: 'Exercise' }} />

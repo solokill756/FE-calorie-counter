@@ -1,5 +1,12 @@
 import { ApiError, type ApiClient, type Session, type SessionStore } from '../../lib/api-client';
 
+export type MealSplits = {
+  breakfast: number;
+  lunch: number;
+  dinner: number;
+  snack: number;
+};
+
 export type UserProfile = {
   id: number;
   email?: string;
@@ -8,11 +15,14 @@ export type UserProfile = {
   avatarUrl?: string | null;
   goalType?: string;
   age?: number | null;
+  gender?: string | null;
   heightCm?: number | null;
   currentWeightKg?: number | null;
   goalWeightKg?: number | null;
   activityLevel?: string | null;
   conditionTypes?: string[];
+  barriers?: string[];
+  mealSplits?: MealSplits;
   nutritionalThresholds?: { nutrient: string; minAmount?: number | null; maxAmount?: number | null; unit?: string }[];
   nutritionTargets?: {
     targetCalories: number;

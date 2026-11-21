@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Action, Body, Card, Field, Loading, Message, Screen } from '../components/ui';
-import { activityOptions, conditions, createOnboardingApi, type OnboardingData } from '../features/account/onboarding';
+import { activityOptions, conditions, createOnboardingApi, genderOptions, type OnboardingData } from '../features/account/onboarding';
 import { useSession } from '../features/account/session';
 import { goalOptions, type GoalType } from '../features/profile/api';
 
@@ -54,7 +54,7 @@ function OnboardingForm({ draft }: { draft?: Partial<OnboardingData> }) {
         <Field label="Current weight (kg)" value={weight} onChangeText={setWeight} keyboardType="decimal-pad" />
         <Field label="Goal weight (kg)" value={goalWeight} onChangeText={setGoalWeight} keyboardType="decimal-pad" />
         <Body>Sex for nutrition calculation</Body>
-        {['male', 'female'].map((value) => <Action key={value} title={gender === value ? `✓ ${value}` : value}
+        {genderOptions.map((value) => <Action key={value} title={gender === value ? `✓ ${value}` : value}
           onPress={() => setGender(value)} />)}
       </Card>
       <Card>

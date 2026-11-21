@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import type { ImagePickerAsset } from 'expo-image-picker';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { Image } from 'react-native';
 import { Action, Body, Card, Field, Message, Screen } from '../../components/ui';
@@ -52,6 +53,7 @@ export default function Profile() {
         {!!profile.conditionTypes?.length && <Body>Health conditions · {profile.conditionTypes.map((item) =>
           item.replaceAll('_', ' ')).join(', ')}</Body>}
       </Card>}
+      <Action title="Edit health profile" disabled={save.isPending} onPress={() => router.push('/profile/health')} />
       <Action title="Choose photo" onPress={selectImage} />
       <Field label="Display name" value={name} onChangeText={setName} />
       <Field label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
