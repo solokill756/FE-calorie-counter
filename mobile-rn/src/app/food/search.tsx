@@ -51,6 +51,10 @@ function FoodPicker({ date, meal }: { date: Date; meal: Meal }) {
       <Action title="Quick add calories" onPress={() => router.push({
         pathname: '/food/quick', params: { date: localDateKey(date), meal },
       })} />
+      <Action title="My foods" onPress={() => router.push('/food/my')} />
+      <Action title="Saved meals" onPress={() => router.push({
+        pathname: '/meals', params: { date: localDateKey(date), meal },
+      })} />
       {isPending && <Loading />}
       <Message error={error} retry={() => void refetch()} />
       {selected && (

@@ -2,10 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
-import { Action, Body, Card, Loading, Message, Screen } from '../../components/ui';
+import { Action, Body, Card, Field, Loading, Message, Screen } from '../../components/ui';
 import { useSession } from '../../features/account/session';
 import { createDiaryApi, entriesForMeal, entryName, mealLabels, meals, refreshDiaryViews } from '../../features/diary/api';
-import { localDateKey, nextDate } from '../../lib/local-date';
+import { localDateKey, nextDate, parseLocalDate } from '../../lib/local-date';
 
 export default function Diary() {
   const { api } = useSession();
@@ -17,6 +17,15 @@ export default function Diary() {
   });
   const remove = useMutation({
     mutationFn: ({ id }: { id: number; dateKey: string }) => diary.removeEntry(id),
+    onSuccess: (_, { dateKey }) => refreshDiaryViews(client, dateKey),
+  });
+
+  const update = useMutation({
+    mutationFn: ({ dateKey, note }: { dateKey: string; note?: string }) => {
+      const day = parseLocalDate(dateKey);
+      if (!day) throw new Error('Choose a valid diary date.');
+      return note === undefined ? diary.complete(day) : diary.updateNote(day, note.trim() || null);
+    },
     onSuccess: (_, { dateKey }) => refreshDiaryViews(client, dateKey),
   });
 
@@ -36,7 +45,7 @@ export default function Diary() {
       </View>
       {isPending && <Loading />}
       <Message error={error} retry={() => void refetch()} />
-      <Message error={remove.error} />
+      <Message error={remove.error ?? update.error} />
       {data && <>
         <Body>{data.totalCalories} kcal logged</Body>
         {meals.map((meal) => {
@@ -58,8 +67,34 @@ export default function Diary() {
             </Card>
           );
         })}
+        <Card>
+          <Body>Water · {data.waterLog?.amountMl ?? 0} ml</Body>
+          <Action title="Open water log" onPress={() => router.push('/water')} />
+        </Card>
+        <Card>
+          <Body>Exercise</Body>
+          {!data.exercises?.length && <Body>No workout logged.</Body>}
+          {data.exercises?.map((item) => <Body key={item.id}>
+            {item.exerciseName ?? 'Workout'} · {item.minutesPerformed ?? 0} min · {item.caloriesBurned ?? 0} kcal
+          </Body>)}
+          <Action title="Open exercise log" onPress={() => router.push('/exercise')} />
+        </Card>
+        <DiaryNote key={date} initial={data.note ?? ''} disabled={Boolean(data.isCompleted) || update.isPending}
+          save={(note) => update.mutate({ dateKey: date, note })} />
+        <Action title={data.isCompleted ? 'Diary completed' : 'Complete diary'}
+          disabled={Boolean(data.isCompleted) || update.isPending} onPress={() => update.mutate({ dateKey: date })} />
       </>}
     </Screen>
+  );
+}
+
+function DiaryNote({ initial, disabled, save }: { initial: string; disabled: boolean; save(note: string): void }) {
+  const [note, setNote] = useState(initial);
+  return (
+    <Card>
+      <Field label="Notes" value={note} onChangeText={setNote} editable={!disabled} multiline />
+      <Action title="Save note" disabled={disabled || note.trim() === initial} onPress={() => save(note)} />
+    </Card>
   );
 }
 

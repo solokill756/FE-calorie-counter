@@ -13,7 +13,12 @@ function setup(transport: typeof fetch) {
   const read = jest.fn(async () => session);
   const write = jest.fn(async (value: typeof expired) => { session = value; });
   const clear = jest.fn(async () => { session = null; });
-  const api = createApiClient('https://test.invalid/', { read, write, clear }, transport);
+  const replace = async (previous: typeof expired, next: typeof expired | null) => {
+    if (session !== previous) return false;
+    session = next;
+    return true;
+  };
+  const api = createApiClient('https://test.invalid/', { read, write, clear, replace }, transport);
   return { api, read, write, clear };
 }
 
@@ -63,4 +68,32 @@ test('restores the backend profile before deciding which screen to show', async 
   expect(initialDestination(await restoreProfile(api, read))).toBe('tabs');
   expect(initialDestination({ ...profile, isProfileComplete: false })).toBe('onboarding');
   expect(initialDestination(null)).toBe('sign-in');
+});
+
+test('does not replay an old request after a different user signs in', async () => {
+  let rejectOld!: (value: Response) => void;
+  let started!: () => void;
+  const firstRequest = new Promise<void>((resolve) => { started = resolve; });
+  const transport: typeof fetch = jest.fn(async (_url, init) => {
+    if (new Headers(init?.headers).get('authorization') !== 'Bearer old') return response(200, { wrongUser: true });
+    started();
+    return new Promise<Response>((resolve) => { rejectOld = resolve; });
+  });
+  const { api, write } = setup(transport);
+  const request = api.request('api/Diary');
+  await firstRequest;
+  await write({ accessToken: 'another-user', refreshToken: 'another-session' });
+  rejectOld(response(401, {}));
+  await expect(request).rejects.toMatchObject({ status: 401 });
+  expect(transport).toHaveBeenCalledTimes(1);
+}, 500);
+
+test('encodes query parameters without changing the API base path', async () => {
+  const transport: typeof fetch = jest.fn(async () => response(200, { items: [] }));
+  const { api } = setup(transport);
+  await api.request('api/Food', { query: { search: 'Bánh & cơm', includeAll: true, unused: undefined } });
+  expect(transport).toHaveBeenCalledWith(
+    'https://test.invalid/api/Food?search=B%C3%A1nh%20%26%20c%C6%A1m&includeAll=true',
+    expect.objectContaining({ method: 'GET' }),
+  );
 });

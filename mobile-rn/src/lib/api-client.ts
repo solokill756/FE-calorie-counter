@@ -7,6 +7,7 @@ export type SessionStore = {
   read(): Promise<Session | null>;
   write(session: Session): Promise<void>;
   clear(): Promise<void>;
+  replace(previous: Session, next: Session | null): Promise<boolean>;
 };
 
 export type RequestOptions = {
@@ -51,7 +52,12 @@ export function createApiClient(
   store: SessionStore,
   transport: typeof fetch = (...args) => fetch(...args),
 ): ApiClient {
-  let refreshing: Promise<Session | null> | undefined;
+  let refreshing: { previous: Session; result: Promise<Session | null> } | undefined;
+  let lastRotation: { previous: Session; next: Session } | undefined;
+
+  function matches(first: Session | null | undefined, second: Session | null | undefined) {
+    return Boolean(first && second && first.accessToken === second.accessToken && first.refreshToken === second.refreshToken);
+  }
 
   async function send(path: string, options: RequestOptions, token?: string) {
     if (!baseUrl) {
@@ -84,18 +90,19 @@ export function createApiClient(
 
   async function refresh(previous: Session): Promise<Session | null> {
     const current = await store.read();
-    if (!current || current.accessToken !== previous.accessToken) return current;
+    if (!current) return null;
+    if (!matches(current, previous)) {
+      return matches(lastRotation?.previous, previous) && matches(lastRotation?.next, current) ? current : null;
+    }
 
     const response = await send('auth/refresh', {
       method: 'POST',
       body: { refreshToken: current.refreshToken },
     });
     const body = await readBody(response);
-    const latest = await store.read();
-    if (latest?.refreshToken !== current.refreshToken) return null;
 
     if ([400, 401, 403].includes(response.status)) {
-      await store.clear();
+      await store.replace(current, null);
       return null;
     }
     if (!response.ok) throw new ApiError(response.status, messageOf(body, response.status));
@@ -107,7 +114,8 @@ export function createApiClient(
       accessToken: data.accessToken,
       refreshToken: data.refreshToken || current.refreshToken,
     };
-    await store.write(updated);
+    if (!(await store.replace(current, updated))) return null;
+    lastRotation = { previous: current, next: updated };
     return updated;
   }
 
@@ -116,9 +124,16 @@ export function createApiClient(
       const previous = options.public ? null : await store.read();
       let response = await send(path, options, previous?.accessToken);
       if (previous && [401, 403].includes(response.status)) {
-        refreshing ??= refresh(previous).finally(() => { refreshing = undefined; });
-        const updated = await refreshing;
-        if (updated) response = await send(path, options, updated.accessToken);
+        if (!refreshing || !matches(refreshing.previous, previous)) {
+          const result = refresh(previous).finally(() => {
+            if (refreshing?.result === result) refreshing = undefined;
+          });
+          refreshing = { previous, result };
+        }
+        const updated = await refreshing.result;
+        if (updated && matches(await store.read(), updated)) {
+          response = await send(path, options, updated.accessToken);
+        }
       }
 
       const body = await readBody(response);

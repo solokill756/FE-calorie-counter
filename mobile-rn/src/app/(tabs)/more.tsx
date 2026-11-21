@@ -23,6 +23,8 @@ export default function More() {
       </Card>
       <Action title="Profile" onPress={() => router.push('/profile')} />
       <Action title="Goal" onPress={() => router.push('/profile/goal')} />
+      <Action title="Pantry" onPress={() => router.push('/pantry')} />
+      <Action title="Recipes" onPress={() => router.push('/recipes')} />
       <Action title="Sign out" onPress={() => void signOut().catch(() => undefined)} />
       <Action title="Delete account" disabled={remove.isPending} onPress={confirmDelete} />
       <Message error={remove.error} />

@@ -48,7 +48,7 @@ export function createAccountApi(api: ApiClient, store: SessionStore) {
     async register(credentials: Credentials, displayName: string) {
       return saveLogin(await api.request<LoginResponse>('auth/register', {
         method: 'POST', public: true,
-        body: { ...credentials, email: credentials.email.trim(), displayName: displayName.trim() },
+        body: { ...credentials, email: credentials.email.trim(), displayName: displayName.trim() || undefined },
       }));
     },
     forgot: (email: string) => api.request('auth/forgot-password', {

@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { Action, Body, Card, Loading, Message, Screen } from '../../components/ui';
 import { useSession } from '../../features/account/session';
 import { createDiaryApi } from '../../features/diary/api';
+import { createNotificationsApi } from '../../features/notifications/api';
 import { localDateKey } from '../../lib/local-date';
 
 export default function Dashboard() {
@@ -11,6 +12,11 @@ export default function Dashboard() {
   const { data, error, isPending, refetch } = useQuery({
     queryKey: ['dashboard', date],
     queryFn: () => createDiaryApi(api).getDashboard(date),
+  });
+
+  const unread = useQuery({
+    queryKey: ['notifications', 'unread'],
+    queryFn: createNotificationsApi(api).count,
   });
 
   return (
@@ -31,6 +37,9 @@ export default function Dashboard() {
       </>}
       <Action title="Nutrition" onPress={() => router.push('/nutrition')} />
       <Action title="Water" onPress={() => router.push('/water')} />
+      <Action title="Exercise" onPress={() => router.push('/exercise')} />
+      <Action title="Record weight" onPress={() => router.push('/weight/form')} />
+      <Action title={unread.data ? `Notifications (${unread.data})` : 'Notifications'} onPress={() => router.push('/notifications')} />
       <Action title="Open diary" onPress={() => router.navigate('/diary')} />
       <Action title="Log food" onPress={() => router.push({ pathname: '/food/search', params: { date, meal: 'breakfast' } })} />
     </Screen>

@@ -12,7 +12,7 @@ export type FoodDetails = {
   servingSize?: number;
   servingsPerContainer?: number;
 } & Partial<Record<string, string | number>>;
-type FoodInput = Omit<FoodDetails, 'id'>;
+type FoodInput = Omit<FoodDetails, 'id'> & { category: string };
 
 export type SavedMeal = {
   id: number;

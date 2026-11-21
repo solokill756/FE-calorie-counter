@@ -12,18 +12,32 @@ export function createSessionStore(onClear: () => void): SessionStore {
     return result;
   }
 
-  return {
-    read: () => run(async () => {
-      const stored = await SecureStore.getItemAsync(sessionKey);
-      if (!stored) return null;
-      const session = JSON.parse(stored) as Partial<Session>;
-      if (!session.accessToken || !session.refreshToken) return null;
-      return { accessToken: session.accessToken, refreshToken: session.refreshToken };
-    }),
-    write: (session) => run(() => SecureStore.setItemAsync(sessionKey, JSON.stringify(session))),
-    clear: () => run(async () => {
+  async function read() {
+    const stored = await SecureStore.getItemAsync(sessionKey);
+    if (!stored) return null;
+    const session = JSON.parse(stored) as Partial<Session>;
+    if (!session.accessToken || !session.refreshToken) return null;
+    return { accessToken: session.accessToken, refreshToken: session.refreshToken };
+  }
+
+  async function write(session: Session | null) {
+    if (session) {
+      await SecureStore.setItemAsync(sessionKey, JSON.stringify(session));
+    } else {
       await SecureStore.deleteItemAsync(sessionKey);
       onClear();
+    }
+  }
+
+  return {
+    read: () => run(read),
+    write: (session) => run(() => write(session)),
+    clear: () => run(() => write(null)),
+    replace: (previous, next) => run(async () => {
+      const current = await read();
+      if (current?.accessToken !== previous.accessToken || current.refreshToken !== previous.refreshToken) return false;
+      await write(next);
+      return true;
     }),
   };
 }

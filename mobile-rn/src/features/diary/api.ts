@@ -24,6 +24,10 @@ export type Diary = {
   totalProtein?: number;
   totalCarbs?: number;
   totalFat?: number;
+  note?: string | null;
+  isCompleted?: boolean;
+  exercises?: { id: number; exerciseName?: string; minutesPerformed?: number; caloriesBurned?: number }[];
+  waterLog?: { amountMl: number; targetMl: number };
   mealGroups?: { mealType: string; logs?: FoodLog[] }[];
 };
 
@@ -77,6 +81,12 @@ export function createDiaryApi(api: ApiClient) {
         loggedOn: localDateKey(input.date),
         LoggedAt: input.date.toISOString(),
       },
+    }),
+    updateNote: (date: Date, note: string | null) => api.request<void>('api/Diary/note', {
+      method: 'PUT', body: { date: date.toISOString(), note },
+    }),
+    complete: (date: Date) => api.request<void>('api/Diary/status', {
+      method: 'POST', body: { date: date.toISOString(), isCompleted: true },
     }),
     removeEntry: (id: number) => api.request<void>(`api/LogFood/${id}`, { method: 'DELETE' }),
   };

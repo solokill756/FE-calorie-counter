@@ -35,8 +35,12 @@ export const conditions = [
 export function createOnboardingApi(api: ApiClient) {
   return {
     draft: () => api.request<{ draftData: Partial<OnboardingData> }>('onboarding/me'),
-    preview: (body: OnboardingData) => api.request<{ nutritionPlan?: { targetCalories: number }; targetCalories?: number }>(
-      'onboarding/preview-nutrition', { method: 'POST', body },
+    preview: (input: OnboardingData) => api.request<{ nutritionPlan?: { targetCalories: number }; targetCalories?: number }>(
+      'onboarding/preview-nutrition', { method: 'POST', body: {
+        gender: input.gender, age: input.age, heightCm: input.heightCm,
+        currentWeightKg: input.currentWeightKg, goalWeightKg: input.goalWeightKg,
+        activityLevel: input.activityLevel, goalType: input.goalType, conditionTypes: input.conditionTypes,
+      } },
     ),
     async save({ conditionTypes, goalType, activityLevel, mealFrequency, barriers, ...basic }: OnboardingData) {
       await api.request('onboarding/basic-info', { method: 'PATCH', body: basic });
