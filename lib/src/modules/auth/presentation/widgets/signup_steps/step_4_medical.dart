@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../data/models/user_profile_model.dart';
+import '../common/health_profile_options.dart';
 import '../common/navigation_buttons.dart';
 
 class Step4Medical extends StatefulWidget {
@@ -21,14 +22,7 @@ class Step4Medical extends StatefulWidget {
 }
 
 class _Step4MedicalState extends State<Step4Medical> {
-  static const List<Map<String, String>> _conditions = [
-    {'label': 'High blood pressure', 'value': 'hypertension'},
-    {'label': 'Diabetes', 'value': 'diabetes'},
-    {'label': 'Heart disease', 'value': 'heart_disease'},
-    {'label': 'Kidney disease', 'value': 'kidney_disease'},
-    {'label': 'Thyroid disorder', 'value': 'thyroid'},
-    {'label': 'High cholesterol', 'value': 'high_cholesterol'},
-  ];
+  static final _conditions = medicalConditionOptions.entries.toList();
 
   final Set<String> _selected = {};
   bool _declaredNone = false;
@@ -204,8 +198,8 @@ class _Step4MedicalState extends State<Step4Medical> {
                       itemCount: _conditions.length,
                       itemBuilder: (context, index) {
                         final item = _conditions[index];
-                        final value = item['value']!;
-                        final label = item['label']!;
+                        final value = item.key;
+                        final label = item.value;
                         final isSelected = _selected.contains(value);
 
                         return Container(

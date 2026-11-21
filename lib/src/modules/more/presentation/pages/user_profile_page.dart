@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 
+import 'edit_health_profile_page.dart';
+
 @RoutePage()
 class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
@@ -29,6 +31,23 @@ class _UserProfilePageState extends State<UserProfilePage> {
     await context.router.push(const EditProfileRoute());
     if (mounted) {
       await context.read<UserProfileCubit>().refresh();
+    }
+  }
+
+  Future<void> _openEditHealthProfile(UserProfileModel profile) async {
+    final cubit = context.read<UserProfileCubit>();
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => EditHealthProfilePage(
+          profile: profile,
+          onSave: cubit.saveHealthProfile,
+        ),
+      ),
+    );
+    if (mounted && saved == true) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Health profile updated')));
     }
   }
 
@@ -62,17 +81,26 @@ class _UserProfilePageState extends State<UserProfilePage> {
           );
         }
 
-        return _ProfileContent(profile: profile, onEdit: _openEditProfile);
+        return _ProfileContent(
+          profile: profile,
+          onEdit: _openEditProfile,
+          onEditHealthProfile: () => _openEditHealthProfile(profile),
+        );
       },
     );
   }
 }
 
 class _ProfileContent extends StatelessWidget {
-  const _ProfileContent({required this.profile, required this.onEdit});
+  const _ProfileContent({
+    required this.profile,
+    required this.onEdit,
+    required this.onEditHealthProfile,
+  });
 
   final UserProfileModel profile;
-  final Future<void> Function() onEdit;
+  final VoidCallback onEdit;
+  final VoidCallback onEditHealthProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -145,6 +173,10 @@ class _ProfileContent extends StatelessWidget {
           _ProfileSection(
             title: 'Health context',
             icon: Icons.health_and_safety_outlined,
+            action: TextButton(
+              onPressed: onEditHealthProfile,
+              child: const Text('Edit health profile'),
+            ),
             rows: [
               _ProfileRow('Allergies', _list(profile.barriers)),
               _ProfileRow(
@@ -254,11 +286,13 @@ class _ProfileSection extends StatelessWidget {
     required this.title,
     required this.icon,
     required this.rows,
+    this.action,
   });
 
   final String title;
   final IconData icon;
   final List<_ProfileRow> rows;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -279,14 +313,17 @@ class _ProfileSection extends StatelessWidget {
               children: [
                 Icon(icon, size: 18, color: scheme.primary),
                 const Gap(8),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: scheme.onSurface,
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: scheme.onSurface,
+                    ),
                   ),
                 ),
+                if (action != null) action!,
               ],
             ),
             const Gap(10),

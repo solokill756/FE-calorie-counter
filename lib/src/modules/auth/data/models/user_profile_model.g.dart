@@ -21,6 +21,10 @@ _$UserProfileModelImpl _$$UserProfileModelImplFromJson(
               ?.map((e) => e as String)
               .toList() ??
           const [],
+      mealSplits: (json['mealSplits'] as Map<String, dynamic>?)?.map(
+            (k, e) => MapEntry(k, (e as num).toInt()),
+          ) ??
+          defaultMealSplits,
       healthyHabits: (json['healthyHabits'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
@@ -67,6 +71,7 @@ Map<String, dynamic> _$$UserProfileModelImplToJson(
       'goals': instance.goals,
       'barriers': instance.barriers,
       'conditionTypes': instance.conditionTypes,
+      'mealSplits': instance.mealSplits,
       'healthyHabits': instance.healthyHabits,
       'mealPlanningFrequency': instance.mealPlanningFrequency,
       'wantsMealPlans': instance.wantsMealPlans,

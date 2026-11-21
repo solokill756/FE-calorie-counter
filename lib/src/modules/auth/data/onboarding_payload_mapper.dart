@@ -15,7 +15,11 @@ class OnboardingPayloadMapper {
 
   static String genderFromApi(String? g) {
     if (g == null || g.isEmpty) return '';
-    return g.toLowerCase() == 'male' ? 'Male' : 'Female';
+    return switch (g.toLowerCase()) {
+      'male' => 'Male',
+      'female' => 'Female',
+      _ => g,
+    };
   }
 
   static String activityToApi(String feValue) {

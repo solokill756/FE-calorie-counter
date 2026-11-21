@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../data/models/user_profile_model.dart';
+import '../common/health_profile_options.dart';
 import '../common/navigation_buttons.dart';
 
 class Step3Barriers extends StatefulWidget {
@@ -27,17 +28,9 @@ class _Step3BarriersState extends State<Step3Barriers> {
       TextEditingController();
   List<String> _selectedAllergies = [];
 
-  final List<String> _availableAllergies = [
+  static const _availableAllergies = [
     _noKnownAllergies,
-    'Peanuts',
-    'Tree nuts',
-    'Milk or lactose',
-    'Eggs',
-    'Fish',
-    'Shellfish',
-    'Soy',
-    'Wheat or gluten',
-    'Sesame',
+    ...foodAllergyOptions,
     _otherAllergies,
   ];
 

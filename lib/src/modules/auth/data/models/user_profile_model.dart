@@ -5,6 +5,13 @@ import 'user_nutritional_threshold_model.dart';
 part 'user_profile_model.freezed.dart';
 part 'user_profile_model.g.dart';
 
+const defaultMealSplits = <String, int>{
+  'breakfast': 25,
+  'lunch': 35,
+  'dinner': 30,
+  'snack': 10,
+};
+
 @freezed
 class UserProfileModel with _$UserProfileModel {
   const factory UserProfileModel({
@@ -12,6 +19,7 @@ class UserProfileModel with _$UserProfileModel {
     @Default([]) List<String> goals,
     @Default([]) List<String> barriers,
     @Default([]) List<String> conditionTypes,
+    @Default(defaultMealSplits) Map<String, int> mealSplits,
     @Default([]) List<String> healthyHabits,
     @Default('') String mealPlanningFrequency,
     @Default(false) bool wantsMealPlans,

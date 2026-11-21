@@ -2,7 +2,7 @@ import 'package:caloriecounter/src/modules/auth/data/models/user_nutritional_thr
 import 'package:caloriecounter/src/modules/auth/data/models/user_profile_model.dart';
 import 'package:caloriecounter/src/modules/auth/data/onboarding_payload_mapper.dart';
 
-/// Maps `GET auth/me` and `PATCH users/profile` JSON to [UserProfileModel].
+/// Maps authenticated profile responses to [UserProfileModel].
 UserProfileModel userProfileFromAuthMeJson(Map<String, dynamic> data) {
   final age = (data['age'] as num?)?.toInt() ?? 0;
   final heightCm = (data['heightCm'] as num?)?.toDouble() ?? 0.0;
@@ -26,6 +26,7 @@ UserProfileModel userProfileFromAuthMeJson(Map<String, dynamic> data) {
     mealPlanningFrequency: data['mealPlanningFrequency'] as String? ?? '',
     barriers: _stringList(data['barriers']),
     conditionTypes: _stringList(data['conditionTypes']),
+    mealSplits: _mealSplits(data['mealSplits']),
   );
   userProfile = OnboardingPayloadMapper.mergeNutritionFromAuthMe(
     userProfile,
@@ -56,3 +57,15 @@ List<String> _stringList(dynamic raw) {
       .toList();
 }
 
+Map<String, int> _mealSplits(dynamic raw) {
+  if (raw is! Map) return defaultMealSplits;
+  final result = <String, int>{};
+  for (final key in defaultMealSplits.keys) {
+    final value = raw[key];
+    if (value is! int || value < 0 || value > 100) return defaultMealSplits;
+    result[key] = value;
+  }
+  return result.values.fold(0, (sum, value) => sum + value) == 100
+      ? result
+      : defaultMealSplits;
+}

@@ -186,6 +186,15 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Result<UserProfileModel, ApiError>> patchHealthProfile(
+    Map<String, Object?> changes,
+  ) {
+    return _dio
+        .patch<Map<String, dynamic>>('users/health-profile', data: changes)
+        .tryGet((response) => userProfileFromAuthMeJson(response.data!));
+  }
+
+  @override
   Future<Result<UserProfileModel, ApiError>> patchUserGoal({
     required String goalTypeSlug,
   }) {

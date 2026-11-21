@@ -29,6 +29,11 @@ abstract class AuthRepository {
     String? avatarUrl,
   });
 
+  /// Sends only changed health fields; a null mealSplits resets the defaults.
+  Future<Result<UserProfileModel, ApiError>> patchHealthProfile(
+    Map<String, Object?> changes,
+  );
+
   /// Updates primary goal; server recomputes calorie/macros targets.
   Future<Result<UserProfileModel, ApiError>> patchUserGoal({
     required String goalTypeSlug,
