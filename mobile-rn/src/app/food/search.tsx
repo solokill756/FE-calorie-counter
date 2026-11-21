@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { Action, Body, Card, Field, Loading, Message, Screen } from '../../components/ui';
 import { useSession } from '../../features/account/session';
 import { createDiaryApi, type FoodPage, logFoodAndRefresh, mealLabels, meals, type Meal } from '../../features/diary/api';
+import { NutrientFilterForm } from '../../features/food/nutrient-filter-form';
+import type { FoodNutrientFilters } from '../../features/food/nutrient-filters';
 import { confirmNutritionLog } from '../../features/food/warning-dialog';
 import { nutrientFields } from '../../features/nutrition/fields';
 import { formatDisplayNumber } from '../../lib/format-display-number';
@@ -27,17 +29,25 @@ function FoodPicker({ date, meal }: { date: Date; meal: Meal }) {
   const diary = createDiaryApi(api);
   const [input, setInput] = useState('');
   const [search, setSearch] = useState('');
+  const [editingFilters, setEditingFilters] = useState(false);
+  const [filters, setFilters] = useState<FoodNutrientFilters>();
+  const filterCount = filters ? Object.keys(filters).length : 0;
   const [selected, setSelected] = useState<FoodPage['items'][number]>();
   const [quantity, setQuantity] = useState('1');
   const [selectedSize, setSelectedSize] = useState('1');
   const { data, error, isPending, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
-    queryKey: ['foods', search],
-    queryFn: ({ pageParam }) => diary.searchFoods(search, pageParam),
+    queryKey: ['foods', search, filters],
+    queryFn: ({ pageParam }) => diary.searchFoods(search, pageParam, filters),
     initialPageParam: 1,
-    getNextPageParam: (page, pages) => page.items.length === 20 ? pages.length + 1 : undefined,
+    getNextPageParam: (page, pages) => {
+      const hasMore = filters && page.total !== undefined
+        ? pages.length * 20 < page.total
+        : page.items.length === 20;
+      return hasMore ? pages.length + 1 : undefined;
+    },
   });
   const today = localDateKey(new Date());
-  const recent = useQuery({ queryKey: ['recent-foods', today], queryFn: () => diary.recentFoods(today), enabled: !search });
+  const recent = useQuery({ queryKey: ['recent-foods', today], queryFn: () => diary.recentFoods(today), enabled: !search && !filters });
   const save = useMutation({
     mutationFn: async ({ food, amount, size }: { food: FoodPage['items'][number]; amount: number; size: number }) => {
       const scale = amount * size / (Number(food.servingSize) || 1);
@@ -60,11 +70,23 @@ function FoodPicker({ date, meal }: { date: Date; meal: Meal }) {
     save.reset();
   }
 
+  function applyFilters(next: FoodNutrientFilters) {
+    setSearch(input.trim());
+    setFilters(Object.keys(next).length ? next : undefined);
+    setEditingFilters(false);
+    setSelected(undefined);
+    save.reset();
+  }
+
   return (
     <Screen title={mealLabels[meal]}>
       <Field label="Search foods" value={input} onChangeText={setInput}
         returnKeyType="search" onSubmitEditing={() => setSearch(input.trim())} />
       <Action title="Search" onPress={() => setSearch(input.trim())} />
+      {editingFilters
+        ? <NutrientFilterForm filters={filters} onApply={applyFilters} onClose={() => setEditingFilters(false)} />
+        : <Action title={filterCount ? `Nutrient filters (${filterCount})` : 'Nutrient filters'}
+            disabled={save.isPending} onPress={() => setEditingFilters(true)} />}
       <Action title="Quick add calories" onPress={() => router.push({
         pathname: '/food/quick', params: { date: localDateKey(date), meal },
       })} />
@@ -89,7 +111,7 @@ function FoodPicker({ date, meal }: { date: Date; meal: Meal }) {
             onPress={() => save.mutate({ food: selected, amount, size })} />
         </Card>
       )}
-      {!search && !!recent.data?.length && <Card>
+      {!search && !filters && !!recent.data?.length && <Card>
         <Body>Recent foods</Body>
         {recent.data.map((food) => <Action key={food.id} title={food.description}
           disabled={save.isPending} onPress={() => select(food)} />)}

@@ -1,6 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
 import type { ApiClient } from '../../lib/api-client';
 import type { FoodDetails } from '../food/api';
+import type { FoodNutrientFilters } from '../food/nutrient-filters';
 import { localDateKey, nextDate } from '../../lib/local-date';
 
 export const meals = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
@@ -79,8 +80,11 @@ export function createDiaryApi(api: ApiClient) {
       }
       return [...recent.values()];
     },
-    searchFoods: (query: string, page: number) => api.request<FoodPage>('api/Food', {
-      query: { search: query || undefined, includeAll: true, page, pageSize: 20 },
+    searchFoods: (query: string, page: number, filters?: FoodNutrientFilters) => api.request<FoodPage>('api/Food', {
+      query: {
+        search: query || undefined, includeAll: true, page, pageSize: 20,
+        nutrientFilters: filters && JSON.stringify(filters),
+      },
     }),
     logFood: (input: FoodLogInput) => api.request<void>('api/LogFood', {
       method: 'POST',
