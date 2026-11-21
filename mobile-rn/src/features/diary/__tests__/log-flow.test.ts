@@ -49,3 +49,15 @@ test('writes notes and completion using the selected day key', async () => {
     ['api/Diary/status', { method: 'POST', body: { date: '2026-11-21', isCompleted: true } }],
   ]);
 });
+
+test('sends nutrient bounds with the food search and page', async () => {
+  const request = jest.fn().mockResolvedValue({ items: [] });
+  const api = createDiaryApi({ request });
+  await api.searchFoods('oats', 2, { proteinG: { min: 20 }, sugarsG: { max: 0 } });
+  expect(request).toHaveBeenCalledWith('api/Food', {
+    query: {
+      search: 'oats', includeAll: true, page: 2, pageSize: 20,
+      nutrientFilters: '{"proteinG":{"min":20},"sugarsG":{"max":0}}',
+    },
+  });
+});
