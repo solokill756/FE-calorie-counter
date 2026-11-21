@@ -4,13 +4,12 @@ import { Action, Field, Message, Screen } from '../../components/ui';
 import { useSession } from '../../features/account/session';
 
 export default function Register() {
-  const { account, setProfile } = useSession();
+  const { register: createAccount } = useSession();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const register = useMutation({
-    mutationFn: () => account.register({ email, password }, displayName),
-    onSuccess: setProfile,
+    mutationFn: () => createAccount(email, password, displayName),
   });
 
   return (

@@ -6,7 +6,8 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { Action, Body, Card, Field, Loading, Message, Screen } from '../../components/ui';
 import { useSession } from '../../features/account/session';
 import { createDiaryApi, meals, refreshDiaryViews } from '../../features/diary/api';
-import { createFoodApi, type SavedMeal } from '../../features/food/api';
+import { createFoodApi, scaledMealNutrients, type SavedMeal } from '../../features/food/api';
+import { confirmNutritionLog } from '../../features/food/warning-dialog';
 import { parseLocalDate } from '../../lib/local-date';
 import { pickImage, uploadImage } from '../../lib/media-upload';
 
@@ -23,6 +24,8 @@ export default function SavedMeals() {
   const [search, setSearch] = useState('');
   const [query, setQuery] = useState('');
   const [amount, setAmount] = useState('1');
+  const [portions, setPortions] = useState('1');
+  const servingCount = Number(portions.trim().replace(',', '.'));
   const service = createFoodApi(api);
   const saved = useQuery({ queryKey: ['meals'], queryFn: service.listMeals });
   const foods = useQuery({ queryKey: ['foods', 'meal-search', query], enabled: Boolean(query && editing && editing !== 'new'),
@@ -55,11 +58,15 @@ export default function SavedMeals() {
     },
   });
   const addToDiary = useMutation({
-    mutationFn: (value: SavedMeal) => {
+    mutationFn: async (value: SavedMeal) => {
       if (!date || !parseLocalDate(date) || !slot) throw new Error('Select a diary date and meal first.');
-      return service.logMeal(date, slot, value);
+      const values = scaledMealNutrients(value, servingCount);
+      if (!(await confirmNutritionLog(() => createDiaryApi(api).getDiary(date), values, profile))) return false;
+      await service.logMeal(date, slot, value, servingCount);
+      return true;
     },
-    onSuccess: async () => {
+    onSuccess: async (logged) => {
+      if (!logged) return;
       if (date) await refreshDiaryViews(client, date);
       router.back();
     },
@@ -77,6 +84,8 @@ export default function SavedMeals() {
 
   return (
     <Screen title="Saved meals">
+      {date && slot && <Field label="Number of portions to log" value={portions} onChangeText={setPortions}
+        keyboardType="decimal-pad" />}
       <Action title="Create meal" onPress={() => start('new')} />
       {editing && <Card>
         <Field label="Meal name" value={name} onChangeText={setName} />
@@ -113,7 +122,7 @@ export default function SavedMeals() {
       {saved.data?.items.length === 0 && <Body>No saved meals.</Body>}
       {saved.data?.items.map((item) => <Card key={item.id}>
         <Body>{item.name} · {item.nutritionSummary?.calories ?? 0} kcal</Body>
-        {date && slot && <Action title="Log meal" disabled={addToDiary.isPending || !item.items.length}
+        {date && slot && <Action title="Log meal" disabled={addToDiary.isPending || !item.items.length || !Number.isFinite(servingCount) || servingCount <= 0}
           onPress={() => addToDiary.mutate(item)} />}
         <Action title="Edit meal" onPress={() => start(item)} />
         <Action title="Delete meal" disabled={deleteMeal.isPending} onPress={() => {

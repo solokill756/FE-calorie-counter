@@ -1,9 +1,11 @@
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Action, Body, Card, Field, Loading, Message, Screen } from '../../components/ui';
 import { useSession } from '../../features/account/session';
 import { createDiaryApi, type FoodPage, logFoodAndRefresh, mealLabels, meals, type Meal } from '../../features/diary/api';
+import { confirmNutritionLog } from '../../features/food/warning-dialog';
+import { nutrientFields } from '../../features/nutrition/fields';
 import { localDateKey, parseLocalDate } from '../../lib/local-date';
 
 export default function SearchFood() {
@@ -19,7 +21,7 @@ export default function SearchFood() {
 }
 
 function FoodPicker({ date, meal }: { date: Date; meal: Meal }) {
-  const { api } = useSession();
+  const { api, profile } = useSession();
   const client = useQueryClient();
   const diary = createDiaryApi(api);
   const [input, setInput] = useState('');
@@ -33,15 +35,29 @@ function FoodPicker({ date, meal }: { date: Date; meal: Meal }) {
     initialPageParam: 1,
     getNextPageParam: (page, pages) => page.items.length === 20 ? pages.length + 1 : undefined,
   });
+  const today = localDateKey(new Date());
+  const recent = useQuery({ queryKey: ['recent-foods', today], queryFn: () => diary.recentFoods(today), enabled: !search });
   const save = useMutation({
-    mutationFn: ({ id, amount, size }: { id: number; amount: number; size: number }) =>
-      logFoodAndRefresh(diary, client, { foodId: id, meal, date, quantity: amount, servingSize: size }),
-    onSuccess: () => router.back(),
+    mutationFn: async ({ food, amount, size }: { food: FoodPage['items'][number]; amount: number; size: number }) => {
+      const scale = amount * size / (Number(food.servingSize) || 1);
+      const projected = Object.fromEntries(nutrientFields.map(([key]) => [key, (Number(food[key]) || 0) * scale]));
+      if (!(await confirmNutritionLog(() => diary.getDiary(localDateKey(date)), projected, profile))) return false;
+      await logFoodAndRefresh(diary, client, { foodId: food.id, meal, date, quantity: amount, servingSize: size });
+      return true;
+    },
+    onSuccess: (saved) => { if (saved) router.back(); },
   });
   const amount = Number(quantity.trim().replace(',', '.'));
   const size = Number(selectedSize.trim().replace(',', '.'));
   const canSave = Number.isFinite(amount) && amount > 0 && Number.isFinite(size) && size > 0;
   const results = data?.pages.flatMap((page) => page.items) ?? [];
+
+  function select(food: FoodPage['items'][number]) {
+    setSelected(food);
+    setQuantity('1');
+    setSelectedSize(String(Number(food.servingSize) > 0 ? food.servingSize : 1));
+    save.reset();
+  }
 
   return (
     <Screen title={mealLabels[meal]}>
@@ -63,22 +79,25 @@ function FoodPicker({ date, meal }: { date: Date; meal: Meal }) {
           <Field label="Number of servings" keyboardType="decimal-pad" value={quantity} onChangeText={setQuantity} />
           <Field label={`Serving size (${selected.servingUnit || 'serving'})`}
             keyboardType="decimal-pad" value={selectedSize} onChangeText={setSelectedSize} />
+          {nutrientFields.filter(([key]) => selected[key] != null).map(([key, , label, unit]) => (
+            <Body key={key}>{label} · {selected[key]} {unit}</Body>
+          ))}
           <Message error={save.error} />
           <Action title={save.isPending ? 'Saving…' : 'Add to diary'} disabled={!canSave || save.isPending}
-            onPress={() => save.mutate({ id: selected.id, amount, size })} />
+            onPress={() => save.mutate({ food: selected, amount, size })} />
         </Card>
       )}
+      {!search && !!recent.data?.length && <Card>
+        <Body>Recent foods</Body>
+        {recent.data.map((food) => <Action key={food.id} title={food.description}
+          disabled={save.isPending} onPress={() => select(food)} />)}
+      </Card>}
       {!isPending && !error && !results.length && <Body>No foods found.</Body>}
       {results.map((food) => (
         <Card key={food.id}>
           <Body>{food.description}{food.brandName ? ` · ${food.brandName}` : ''}</Body>
           {food.calories != null && <Body>{food.calories} kcal</Body>}
-          <Action title="Select" disabled={save.isPending} onPress={() => {
-            setSelected(food);
-            setQuantity('1');
-            setSelectedSize(String(Number(food.servingSize) > 0 ? food.servingSize : 1));
-            save.reset();
-          }} />
+          <Action title="Select" disabled={save.isPending} onPress={() => select(food)} />
         </Card>
       ))}
       {hasNextPage && <Action title="Load more" disabled={isFetchingNextPage} onPress={() => void fetchNextPage()} />}

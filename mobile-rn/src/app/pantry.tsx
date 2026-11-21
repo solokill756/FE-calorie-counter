@@ -1,11 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { randomUUID } from 'expo-crypto';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Switch } from 'react-native';
+import { AppState, Switch } from 'react-native';
 import { Action, Body, Card, Field, Loading, Message, Screen } from '../components/ui';
 import { useSession } from '../features/account/session';
 import { createDiaryApi } from '../features/diary/api';
+import { notifyRecipeStatus } from '../features/notifications/native';
 import { createRecipeApi } from '../features/recipes/api';
 import { localDateKey } from '../lib/local-date';
 
@@ -36,7 +38,14 @@ export default function Pantry() {
     onSuccess: () => client.invalidateQueries({ queryKey: ['pantry'] }),
   });
   const plan = useMutation({
-    mutationFn: () => service.plan(localDateKey(new Date())),
+    mutationFn: ({ date }: { date: string; jobId: string }) => service.plan(date),
+    onSuccess: async (_, { jobId }) => {
+      if (profile && AppState.currentState !== 'active') {
+        await notifyRecipeStatus({
+          ownerId: profile.id, kind: 'pantry', jobId, title: 'Meal plan ready', body: 'Open your pantry to see today’s plan.',
+        }).catch(() => undefined);
+      }
+    },
     onSettled: () => Promise.all([
       client.invalidateQueries({ queryKey: ['fridge-quota'] }),
       client.invalidateQueries({ queryKey: ['recipes'] }),
@@ -68,7 +77,7 @@ export default function Pantry() {
         <Message error={setting.error ?? updateSetting.error} />
       </Card>
       {!setting.data && <Action title={plan.isPending || quota.data?.inProgress ? 'Generating…' : 'Generate today’s plan'}
-        disabled={plan.isPending || quota.data?.inProgress || !list.data?.length} onPress={() => plan.mutate()} />}
+        disabled={plan.isPending || quota.data?.inProgress || !list.data?.length} onPress={() => plan.mutate({ date: localDateKey(new Date()), jobId: randomUUID() })} />}
       {plan.data?.slots.map((slot) => <Body key={slot.mealSlot}>
         {slot.mealSlot} · {slot.status}{slot.reason ? ` · ${slot.reason}` : ''}
       </Body>)}

@@ -30,10 +30,13 @@ const config: ExpoConfig = {
     ['expo-image-picker', { microphonePermission: false }],
     'expo-notifications',
     'expo-sharing',
-    ['expo-build-properties', { android: { minSdkVersion: 24 }, ios: { deploymentTarget: '15.1', useFrameworks: 'static' } }],
+    ['expo-build-properties', { android: { minSdkVersion: 24 }, ios: { deploymentTarget: '15.1', useFrameworks: 'dynamic' } }],
     ...(appleSignIn ? ['expo-apple-authentication'] : []),
     ...(androidFirebase || iosFirebase ? ['@react-native-firebase/app', '@react-native-firebase/auth'] : []),
-    ...(iosScheme ? [['@react-native-google-signin/google-signin', { iosUrlScheme: iosScheme }] as [string, object]] : []),
+    ['@react-native-google-signin/google-signin', {
+      iosDependencyManager: 'spm',
+      ...(iosScheme ? { iosUrlScheme: iosScheme } : {}),
+    }],
   ],
 };
 

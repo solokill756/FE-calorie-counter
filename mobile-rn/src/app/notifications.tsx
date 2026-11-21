@@ -5,7 +5,7 @@ import { useSession } from '../features/account/session';
 import { createNotificationsApi } from '../features/notifications/api';
 
 export default function NotificationsScreen() {
-  const { api } = useSession();
+  const { api, restore } = useSession();
   const client = useQueryClient();
   const service = createNotificationsApi(api);
   const notices = useInfiniteQuery({
@@ -20,7 +20,10 @@ export default function NotificationsScreen() {
     },
     onSuccess: async (_, { type }) => {
       await client.invalidateQueries({ queryKey: ['notifications'] });
-      if (type === 'threshold_adjusted') router.push('/nutrition');
+      if (type === 'threshold_adjusted') {
+        await restore();
+        router.push('/nutrition');
+      }
     },
   });
   const rows = notices.data?.pages.flatMap((page) => page.items) ?? [];

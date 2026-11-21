@@ -1,6 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
 import type { ApiClient } from '../../lib/api-client';
-import { localDateKey } from '../../lib/local-date';
+import type { FoodDetails } from '../food/api';
+import { localDateKey, nextDate } from '../../lib/local-date';
 
 export const meals = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
 export type Meal = (typeof meals)[number];
@@ -24,9 +25,15 @@ export type Diary = {
   totalProtein?: number;
   totalCarbs?: number;
   totalFat?: number;
+  totalSugarsG?: number;
+  totalSodiumMg?: number;
+  totalSaturatedFatG?: number;
+  totalCholesterolMg?: number;
+  totalDietaryFibersG?: number;
+  totalPotassiumMg?: number;
   note?: string | null;
   isCompleted?: boolean;
-  exercises?: { id: number; exerciseName?: string; minutesPerformed?: number; caloriesBurned?: number }[];
+  exercises?: { id: string; name: string; duration: number; caloriesBurned: number }[];
   waterLog?: { amountMl: number; targetMl: number };
   mealGroups?: { mealType: string; logs?: FoodLog[] }[];
 };
@@ -43,17 +50,8 @@ export type Dashboard = {
   weight?: { currentKg?: number | null; goalKg?: number | null };
 };
 
-type Food = {
-  id: number;
-  description: string;
-  brandName?: string | null;
-  calories?: number | string;
-  servingSize?: number | string;
-  servingUnit?: string;
-  servingsPerContainer?: number | string;
-};
 
-export type FoodPage = { items: Food[]; total?: number };
+export type FoodPage = { items: FoodDetails[]; total?: number };
 
 type FoodLogInput = {
   foodId: number;
@@ -67,6 +65,20 @@ export function createDiaryApi(api: ApiClient) {
   return {
     getDiary: (dateKey: string) => api.request<Diary>(`api/Diary/${dateKey}`),
     getDashboard: (dateKey: string) => api.request<Dashboard>('api/dashboard/today', { query: { date: dateKey } }),
+    getSuggestion: (date: string) => api.request<{ title: string; message: string }>('api/dashboard/today/suggestion', {
+      query: { date },
+    }),
+    async recentFoods(date: string) {
+      const { items } = await api.request<{ items: { food?: FoodDetails | null }[] }>('api/LogFood', {
+        query: { startDate: nextDate(date, -30), endDate: date, page: 1, pageSize: 30 },
+      });
+      const recent = new Map<number, FoodDetails>();
+      for (const item of items) {
+        if (item.food && !recent.has(item.food.id)) recent.set(item.food.id, item.food);
+        if (recent.size === 5) break;
+      }
+      return [...recent.values()];
+    },
     searchFoods: (query: string, page: number) => api.request<FoodPage>('api/Food', {
       query: { search: query || undefined, includeAll: true, page, pageSize: 20 },
     }),
@@ -83,10 +95,10 @@ export function createDiaryApi(api: ApiClient) {
       },
     }),
     updateNote: (date: Date, note: string | null) => api.request<void>('api/Diary/note', {
-      method: 'PUT', body: { date: date.toISOString(), note },
+      method: 'PUT', body: { date: localDateKey(date), note },
     }),
     complete: (date: Date) => api.request<void>('api/Diary/status', {
-      method: 'POST', body: { date: date.toISOString(), isCompleted: true },
+      method: 'POST', body: { date: localDateKey(date), isCompleted: true },
     }),
     removeEntry: (id: number) => api.request<void>(`api/LogFood/${id}`, { method: 'DELETE' }),
   };
@@ -109,6 +121,7 @@ export async function refreshDiaryViews(queryClient: QueryClient, dateKey: strin
     queryClient.invalidateQueries({ queryKey: ['diary', dateKey] }),
     queryClient.invalidateQueries({ queryKey: ['dashboard', dateKey] }),
     queryClient.invalidateQueries({ queryKey: ['nutrition'] }),
+    queryClient.invalidateQueries({ queryKey: ['recent-foods'] }),
   ]);
 }
 

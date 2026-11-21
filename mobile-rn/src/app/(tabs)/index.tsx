@@ -14,6 +14,12 @@ export default function Dashboard() {
     queryFn: () => createDiaryApi(api).getDashboard(date),
   });
 
+  const suggestion = useQuery({
+    queryKey: ['suggestion', date],
+    queryFn: () => createDiaryApi(api).getSuggestion(date),
+    enabled: !!data,
+    staleTime: 5 * 60 * 1000,
+  });
   const unread = useQuery({
     queryKey: ['notifications', 'unread'],
     queryFn: createNotificationsApi(api).count,
@@ -35,6 +41,10 @@ export default function Dashboard() {
         {data.water && <Card><Body>Water · {data.water.currentMl} / {data.water.targetMl} ml</Body></Card>}
         {data.exercise && <Card><Body>Exercise · {data.exercise.minutes} min</Body></Card>}
       </>}
+      {suggestion.data?.message && <Card>
+        <Body>{suggestion.data.title}</Body>
+        <Body>{suggestion.data.message}</Body>
+      </Card>}
       <Action title="Nutrition" onPress={() => router.push('/nutrition')} />
       <Action title="Water" onPress={() => router.push('/water')} />
       <Action title="Exercise" onPress={() => router.push('/exercise')} />

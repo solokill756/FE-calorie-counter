@@ -23,7 +23,6 @@ export default function Progress() {
   return (
     <Screen title="Progress">
       <Action title="Record weight" onPress={() => router.push('/weight/form')} />
-      <Action title="Body measurements" onPress={() => router.push('/weight/measurements')} />
       {trends.data?.summary && <Card>
         <Body>Current streak · {trends.data.summary.currentStreak} days</Body>
         <Body>Best streak · {trends.data.summary.bestStreak} days</Body>

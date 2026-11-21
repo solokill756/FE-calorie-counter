@@ -3,7 +3,7 @@ import type { Session, SessionStore } from './api-client';
 
 const sessionKey = 'calorie-counter.session';
 
-export function createSessionStore(onClear: () => void): SessionStore {
+export function createSessionStore(onClear: () => void, onNewSession: () => void): SessionStore {
   let pending = Promise.resolve();
 
   function run<T>(task: () => Promise<T>): Promise<T> {
@@ -31,8 +31,13 @@ export function createSessionStore(onClear: () => void): SessionStore {
 
   return {
     read: () => run(read),
-    write: (session) => run(() => write(session)),
-    clear: () => run(() => write(null)),
+    write: (session) => run(async () => {
+      await write(session);
+      onNewSession();
+    }),
+    clear: (allowed) => run(async () => {
+      if (!allowed || allowed()) await write(null);
+    }),
     replace: (previous, next) => run(async () => {
       const current = await read();
       if (current?.accessToken !== previous.accessToken || current.refreshToken !== previous.refreshToken) return false;

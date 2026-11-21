@@ -61,13 +61,14 @@ export default function Recipes() {
         <Message error={available.error ?? staples.error} />
         {[...choices].map(([id, label]) => <Action key={id} title={selected[id] ? `✓ ${label}` : label}
           onPress={() => toggle(id, label)} />)}
-        <Action title={job.busy ? 'Generating…' : 'Generate recipe'} disabled={!foodIds.length || job.busy}
-          onPress={() => job.generate.mutate({ foodIds, meal, date: localDateKey(new Date()) })} />
-        <Message error={job.generate.error ?? job.save.error} />
+        <Action title={job.busy ? 'Generating…' : 'Generate recipe'} disabled={!foodIds.length || job.busy || !!job.draft}
+          onPress={() => job.generate({ foodIds, meal, date: localDateKey(new Date()) })} />
+        <Message error={job.error} />
         {job.ready && <Body>Saved · {job.ready}</Body>}
-        {job.draft && job.save.isError && <>
+        {job.interrupted && <Body>The app closed before generation finished. You can start again.</Body>}
+        {job.draft && !job.busy && <>
           <Body>{job.draft.name}</Body>
-          <Action title="Retry saving recipe" onPress={() => { if (job.draft) job.save.mutate(job.draft); }} />
+          <Action title="Retry saving recipe" onPress={job.retryDraft} />
           <Action title="Discard draft" onPress={job.discard} />
         </>}
       </Card>
@@ -88,12 +89,7 @@ export default function Recipes() {
       </Card>}
       {saved.data?.map((recipe) => <Card key={recipe.id}>
         <Body>{recipe.name} · {recipe.servings} servings</Body>
-        {recipe.description && <Body>{recipe.description}</Body>}
-        {recipe.warnings?.map((text, index) => <Body key={index}>{text}</Body>)}
-        {recipe.ingredients?.map((item, index) => (
-          <Body key={index}>{item.name} · {item.quantity} {item.unit}</Body>
-        ))}
-        {recipe.steps?.map((step, index) => <Body key={index}>{index + 1}. {step.instruction}</Body>)}
+        <Action title="View recipe" onPress={() => router.push({ pathname: '/recipes/[id]', params: { id: String(recipe.id) } })} />
         <Action title="Edit recipe" onPress={() => {
           setEditing(recipe);
           setName(recipe.name);

@@ -1,4 +1,4 @@
-import { createApiClient } from '../api-client';
+import { bindApiToSession, createApiClient } from '../api-client';
 import { initialDestination, restoreProfile } from '../../features/account/api';
 
 const expired = { accessToken: 'old', refreshToken: 'refresh' };
@@ -96,4 +96,17 @@ test('encodes query parameters without changing the API base path', async () => 
     'https://test.invalid/api/Food?search=B%C3%A1nh%20%26%20c%C6%A1m&includeAll=true',
     expect.objectContaining({ method: 'GET' }),
   );
+});
+
+test('rejects the second step of a mutation after its account is replaced', async () => {
+  let generation = 1;
+  const transport: typeof fetch = jest.fn(async () => response(200, { ok: true }));
+  const { api, write } = setup(transport);
+  const original = bindApiToSession(api, () => generation === 1);
+  await write({ accessToken: 'another-user', refreshToken: 'another-session' });
+  generation += 1;
+
+  await expect(original.request('users/profile', { method: 'PATCH', body: { displayName: 'Previous user' } }))
+    .rejects.toThrow('Session changed');
+  expect(transport).not.toHaveBeenCalled();
 });

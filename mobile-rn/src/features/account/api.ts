@@ -7,6 +7,13 @@ export type UserProfile = {
   isProfileComplete: boolean;
   avatarUrl?: string | null;
   goalType?: string;
+  age?: number | null;
+  heightCm?: number | null;
+  currentWeightKg?: number | null;
+  goalWeightKg?: number | null;
+  activityLevel?: string | null;
+  conditionTypes?: string[];
+  nutritionalThresholds?: { nutrient: string; minAmount?: number | null; maxAmount?: number | null; unit?: string }[];
   nutritionTargets?: {
     targetCalories: number;
     proteinG: number;
@@ -37,11 +44,20 @@ export async function restoreProfile(api: ApiClient, read: SessionStore['read'])
   }
 }
 
-export function createAccountApi(api: ApiClient, store: SessionStore) {
+export function createAccountApi(api: ApiClient, store: SessionStore, isCurrent?: () => boolean) {
   async function saveLogin(response: LoginResponse) {
     const { accessToken, refreshToken, user } = response;
     await store.write({ accessToken, refreshToken });
-    return user;
+    if (!user.isProfileComplete) return user;
+
+    try {
+      const profile = await restoreProfile(api, store.read);
+      if (profile) return profile;
+    } catch (error) {
+      if (!(error instanceof ApiError) || error.status >= 500) return user;
+      throw error;
+    }
+    throw new ApiError(401, 'The signed-in session could not be restored.');
   }
 
   return {
@@ -51,7 +67,7 @@ export function createAccountApi(api: ApiClient, store: SessionStore) {
         body: { ...credentials, email: credentials.email.trim(), displayName: displayName.trim() || undefined },
       }));
     },
-    forgot: (email: string) => api.request('auth/forgot-password', {
+    forgot: (email: string) => api.request<{ success: boolean; resetToken?: string }>('auth/forgot-password', {
       method: 'POST', public: true, body: { email: email.trim() },
     }),
     reset: (token: string, newPassword: string) => api.request<{ success: boolean }>('auth/reset-password', {
@@ -64,7 +80,7 @@ export function createAccountApi(api: ApiClient, store: SessionStore) {
     },
     async deleteAccount() {
       await api.request('users/me', { method: 'DELETE' });
-      await store.clear();
+      await store.clear(isCurrent);
     },
     async signIn(credentials: Credentials) {
       return saveLogin(await api.request<LoginResponse>('auth/login', {
@@ -77,7 +93,7 @@ export function createAccountApi(api: ApiClient, store: SessionStore) {
       try {
         await api.request('auth/logout-all', { method: 'POST' });
       } finally {
-        await store.clear();
+        await store.clear(isCurrent);
       }
     },
     restore: () => restoreProfile(api, store.read),

@@ -37,3 +37,15 @@ test('records the selected food portion and invalidates both views after saving'
   expect(queryClient.getQueryState(['diary', '2026-11-21'])?.isInvalidated).toBe(true);
   expect(queryClient.getQueryState(['dashboard', '2026-11-21'])?.isInvalidated).toBe(true);
 });
+
+test('writes notes and completion using the selected day key', async () => {
+  const request = jest.fn();
+  const api = createDiaryApi({ request });
+  const date = new Date(2026, 10, 21, 22, 0);
+  await api.updateNote(date, 'A note');
+  await api.complete(date);
+  expect(request.mock.calls).toEqual([
+    ['api/Diary/note', { method: 'PUT', body: { date: '2026-11-21', note: 'A note' } }],
+    ['api/Diary/status', { method: 'POST', body: { date: '2026-11-21', isCompleted: true } }],
+  ]);
+});

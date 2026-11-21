@@ -109,6 +109,7 @@ export function createRecipeApi(api: ApiClient) {
     generate: (foodIds: number[], mealSlot: Meal, date: string, constraints?: { maxTimeMinutes?: number }, signal?: AbortSignal) =>
       api.request<Generated>('recipe-builder/generate', { method: 'POST', signal, body: { foodIds, mealSlot, date, constraints } }),
     list: () => api.request<Recipe[]>('recipe-builder/recipes'),
+    detail: (id: number) => api.request<Recipe>(`recipe-builder/recipes/${id}`),
     save: (body: RecipeDraft, id?: number, signal?: AbortSignal) => api.request<Recipe>(
       id ? `recipe-builder/recipes/${id}` : 'recipe-builder/recipes', { method: id ? 'PUT' : 'POST', body: recipePayload(body), signal },
     ),

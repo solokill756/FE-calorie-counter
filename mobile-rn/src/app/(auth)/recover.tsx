@@ -10,7 +10,10 @@ export default function Recover() {
   const [email, setEmail] = useState('');
   const [token, setToken] = useState(params.token ?? '');
   const [password, setPassword] = useState('');
-  const send = useMutation({ mutationFn: () => account.forgot(email) });
+  const send = useMutation({
+    mutationFn: () => account.forgot(email),
+    onSuccess: ({ resetToken }) => { if (resetToken) setToken(resetToken); },
+  });
   const reset = useMutation({
     mutationFn: async () => {
       const result = await account.reset(token, password);
@@ -23,8 +26,8 @@ export default function Recover() {
     <Screen title="Reset password">
       <Card>
         <Field label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
-        <Action title="Send reset email" disabled={!email.trim() || send.isPending} onPress={() => send.mutate()} />
-        {send.isSuccess && <Body>Check your email for reset instructions.</Body>}
+        <Action title="Request reset token" disabled={!email.trim() || send.isPending} onPress={() => send.mutate()} />
+        {send.isSuccess && <Body>{send.data.resetToken ? 'A reset token is ready.' : 'Enter the reset token if you received one.'}</Body>}
         <Message error={send.error} />
       </Card>
       <Card>

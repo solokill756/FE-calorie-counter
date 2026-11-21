@@ -3,6 +3,14 @@ import { Platform } from 'react-native';
 import { reconcileMealReminders } from './reminders';
 
 const channel = 'meal_log_reminders';
+
+if (Platform.OS !== 'web') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false,
+    }),
+  });
+}
 let pending = Promise.resolve();
 
 async function permission(request: boolean) {
@@ -43,10 +51,16 @@ export function syncMealReminders(signedIn: boolean, requestPermission = false) 
   return result;
 }
 
-export async function notifyRecipeReady(name: string) {
+export async function notifyRecipeStatus({
+  ownerId, kind, jobId, title, body, recipeId,
+}: {
+  ownerId: number; kind: 'recipe' | 'pantry'; jobId: string;
+  title: string; body: string; recipeId?: number;
+}) {
   if (!(await permission(false))) return;
   await Notifications.scheduleNotificationAsync({
-    content: { title: 'Recipe ready', body: name, data: { kind: 'recipe' } },
+    identifier: `calorie-${kind}-${jobId}`,
+    content: { title, body, data: { kind, ownerId, recipeId: recipeId ?? null } },
     trigger: null,
   });
 }

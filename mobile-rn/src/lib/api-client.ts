@@ -6,7 +6,7 @@ export type Session = {
 export type SessionStore = {
   read(): Promise<Session | null>;
   write(session: Session): Promise<void>;
-  clear(): Promise<void>;
+  clear(allowed?: () => boolean): Promise<void>;
   replace(previous: Session, next: Session | null): Promise<boolean>;
 };
 
@@ -16,6 +16,7 @@ export type RequestOptions = {
   query?: Record<string, string | number | boolean | undefined>;
   body?: unknown;
   signal?: AbortSignal;
+  sessionGuard?: () => boolean;
 };
 
 export class ApiError extends Error {
@@ -28,6 +29,14 @@ export class ApiError extends Error {
 export type ApiClient = {
   request<T>(path: string, options?: RequestOptions): Promise<T>;
 };
+
+export function bindApiToSession(api: ApiClient, sessionGuard: () => boolean): ApiClient {
+  return { request: <T>(path: string, options?: RequestOptions) => api.request<T>(path, { ...options, sessionGuard }) };
+}
+
+function requireCurrentSession(guard?: () => boolean) {
+  if (guard && !guard()) throw new ApiError(401, 'Session changed. Please sign in again.');
+}
 
 async function readBody(response: Response): Promise<unknown> {
   const body = await response.text();
@@ -121,8 +130,11 @@ export function createApiClient(
 
   return {
     async request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+      requireCurrentSession(options.sessionGuard);
       const previous = options.public ? null : await store.read();
+      requireCurrentSession(options.sessionGuard);
       let response = await send(path, options, previous?.accessToken);
+      requireCurrentSession(options.sessionGuard);
       if (previous && [401, 403].includes(response.status)) {
         if (!refreshing || !matches(refreshing.previous, previous)) {
           const result = refresh(previous).finally(() => {
@@ -132,11 +144,13 @@ export function createApiClient(
         }
         const updated = await refreshing.result;
         if (updated && matches(await store.read(), updated)) {
+          requireCurrentSession(options.sessionGuard);
           response = await send(path, options, updated.accessToken);
         }
       }
 
       const body = await readBody(response);
+      requireCurrentSession(options.sessionGuard);
       if (!response.ok) throw new ApiError(response.status, messageOf(body, response.status));
       return body as T;
     },

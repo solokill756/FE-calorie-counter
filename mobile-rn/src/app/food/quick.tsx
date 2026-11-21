@@ -3,12 +3,13 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Action, Body, Field, Message, Screen } from '../../components/ui';
 import { useSession } from '../../features/account/session';
-import { mealLabels, meals, refreshDiaryViews } from '../../features/diary/api';
+import { createDiaryApi, mealLabels, meals, refreshDiaryViews } from '../../features/diary/api';
 import { createFoodApi } from '../../features/food/api';
+import { confirmNutritionLog } from '../../features/food/warning-dialog';
 import { parseLocalDate } from '../../lib/local-date';
 
 export default function QuickFood() {
-  const { api } = useSession();
+  const { api, profile } = useSession();
   const client = useQueryClient();
   const { date = '', meal } = useLocalSearchParams<{ date?: string; meal?: string }>();
   const selectedMeal = meals.find((value) => value === meal) ?? 'breakfast';
@@ -19,10 +20,14 @@ export default function QuickFood() {
   const parse = (value: string) => Number(value.trim().replace(',', '.'));
   const valid = parse(calories) > 0 && [calories, protein, carbs, fat].map(parse).every((value) => Number.isFinite(value) && value >= 0);
   const save = useMutation({
-    mutationFn: () => createFoodApi(api).quickAdd(date, selectedMeal, {
-      calories: parse(calories), proteinG: parse(protein), totalCarbohydratesG: parse(carbs), totalFatG: parse(fat),
-    }),
-    onSuccess: async () => {
+    mutationFn: async () => {
+      const values = { calories: parse(calories), proteinG: parse(protein), totalCarbohydratesG: parse(carbs), totalFatG: parse(fat) };
+      if (!(await confirmNutritionLog(() => createDiaryApi(api).getDiary(date), values, profile))) return false;
+      await createFoodApi(api).quickAdd(date, selectedMeal, values);
+      return true;
+    },
+    onSuccess: async (saved) => {
+      if (!saved) return;
       await refreshDiaryViews(client, date);
       router.back();
     },

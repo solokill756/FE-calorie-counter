@@ -36,8 +36,8 @@ function Navigation() {
         <Stack.Screen name="exercise/index" options={{ title: 'Exercise' }} />
         <Stack.Screen name="exercise/history" options={{ title: 'History' }} />
         <Stack.Screen name="weight/form" options={{ title: 'Weight' }} />
-        <Stack.Screen name="weight/measurements" options={{ title: 'Measurements' }} />
         <Stack.Screen name="recipes/index" options={{ title: 'Recipes' }} />
+        <Stack.Screen name="recipes/[id]" options={{ title: 'Recipe' }} />
         <Stack.Screen name="recipes/photo" options={{ title: 'Ingredient photo' }} />
         <Stack.Screen name="pantry" options={{ title: 'Pantry' }} />
         <Stack.Screen name="notifications" options={{ title: 'Notifications' }} />

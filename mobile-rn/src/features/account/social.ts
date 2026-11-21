@@ -20,7 +20,10 @@ export async function appleToken(): Promise<string | null> {
   const nonce = randomUUID();
   const hashed = await digestStringAsync(CryptoDigestAlgorithm.SHA256, nonce);
   try {
-    const result = await AppleAuthentication.signInAsync({ nonce: hashed });
+    const result = await AppleAuthentication.signInAsync({
+      nonce: hashed,
+      requestedScopes: [AppleAuthentication.AppleAuthenticationScope.EMAIL],
+    });
     if (!result.identityToken) throw new Error('Apple did not return an identity token.');
     const credential = AppleAuthProvider.credential(result.identityToken, nonce);
     const { user } = await signInWithCredential(getAuth(), credential);

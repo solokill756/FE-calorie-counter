@@ -75,7 +75,7 @@ export default function Diary() {
           <Body>Exercise</Body>
           {!data.exercises?.length && <Body>No workout logged.</Body>}
           {data.exercises?.map((item) => <Body key={item.id}>
-            {item.exerciseName ?? 'Workout'} · {item.minutesPerformed ?? 0} min · {item.caloriesBurned ?? 0} kcal
+            {item.name} · {item.duration} min · {item.caloriesBurned} kcal
           </Body>)}
           <Action title="Open exercise log" onPress={() => router.push('/exercise')} />
         </Card>

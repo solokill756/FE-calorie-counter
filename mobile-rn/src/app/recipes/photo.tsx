@@ -68,12 +68,12 @@ export default function PhotoRecipe() {
       {ids.length > 0 && <Card>
         {meals.map((value) => <Action key={value} title={meal === value ? `✓ ${mealLabels[value]}` : mealLabels[value]}
           onPress={() => setMeal(value)} />)}
-        <Action title={job.busy ? 'Generating…' : 'Generate recipe'} disabled={job.busy}
-          onPress={() => job.generate.mutate({ foodIds: ids, meal, date: localDateKey(new Date()) })} />
+        <Action title={job.busy ? 'Generating…' : 'Generate recipe'} disabled={job.busy || !!job.draft}
+          onPress={() => job.generate({ foodIds: ids, meal, date: localDateKey(new Date()) })} />
         {job.ready && <Body>Saved · {job.ready}</Body>}
-        <Message error={job.generate.error ?? job.save.error} />
-        {job.draft && job.save.isError && <Action title="Retry saving recipe"
-          onPress={() => { if (job.draft) job.save.mutate(job.draft); }} />}
+        <Message error={job.error} />
+        {job.draft && !job.busy && <Action title="Retry saving recipe"
+          onPress={job.retryDraft} />}
       </Card>}
     </Screen>
   );

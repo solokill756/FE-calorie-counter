@@ -6,7 +6,7 @@ import { Action, Field, Message, Screen } from '../../components/ui';
 import { useSession } from '../../features/account/session';
 
 export default function SignIn() {
-  const { account, setProfile, signIn } = useSession();
+  const { signInWithProvider, signIn } = useSession();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -29,7 +29,7 @@ export default function SignIn() {
     setError(undefined);
     try {
       const token = await (provider === 'google' ? googleToken() : appleToken());
-      if (token) setProfile(await account.socialSignIn(provider, token));
+      if (token) await signInWithProvider(provider, token);
     } catch (cause) {
       setError(cause);
     } finally {
